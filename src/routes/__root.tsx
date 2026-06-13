@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "YOHRIAE" },
       { property: "og:site_name", content: "YOHRIAE" },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "YOHRIAE — Activating Empowerment. Igniting Change." },
+      { property: "og:title", content: "YOHRIAE — Youth Health and Rights Initiative" },
       {
         property: "og:description",
         content:
@@ -96,6 +96,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#c026d3" },
+      { name: "twitter:title", content: "YOHRIAE — Youth Health and Rights Initiative" },
+      { name: "description", content: "A modern NGO website for Yohriae, featuring responsive design, event management, and donation processing." },
+      { property: "og:description", content: "A modern NGO website for Yohriae, featuring responsive design, event management, and donation processing." },
+      { name: "twitter:description", content: "A modern NGO website for Yohriae, featuring responsive design, event management, and donation processing." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/455a4834-473e-498a-96ee-f27782a83a37/id-preview-7228dcee--bc2d6ffa-72f5-4f13-b479-e0b873f18d0e.lovable.app-1781368796558.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/455a4834-473e-498a-96ee-f27782a83a37/id-preview-7228dcee--bc2d6ffa-72f5-4f13-b479-e0b873f18d0e.lovable.app-1781368796558.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
