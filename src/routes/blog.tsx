@@ -1,9 +1,49 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, BookOpen } from "lucide-react";
+
+function BlogCover({
+  src,
+  className,
+  size = "medium",
+}: {
+  src: string | null | undefined;
+  className?: string;
+  size?: "large" | "medium";
+}) {
+  const [failed, setFailed] = useState(false);
+  const trimmed = (src ?? "").trim();
+  const usable = !failed && trimmed.length > 0;
+  if (usable) {
+    return (
+      <img
+        src={trimmed}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailed(true)}
+        className={className}
+      />
+    );
+  }
+  return (
+    <div
+      className={`flex items-center justify-center bg-gradient-to-br from-[color-mix(in_srgb,var(--brand-cyan)_12%,white)] to-[color-mix(in_srgb,var(--brand-magenta)_8%,white)] ${className ?? ""}`}
+    >
+      <BookOpen
+        className={
+          size === "large"
+            ? "h-12 w-12 text-primary/40"
+            : "h-8 w-8 text-primary/40"
+        }
+      />
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/blog")({
   head: () => ({
@@ -61,20 +101,13 @@ function Blog() {
         ) : (
           <>
             {featured && (
-              <article className="card-ngo mb-12 overflow-hidden lg:grid lg:grid-cols-2">
-                {featured.featured_image_url ? (
-                  <img
-                    src={featured.featured_image_url}
-                    alt=""
-                    loading="lazy"
-                    className="aspect-[16/10] w-full object-cover lg:aspect-auto lg:min-h-[320px]"
-                  />
-                ) : (
-                  <div className="flex aspect-[16/10] items-center justify-center bg-primary/5 lg:aspect-auto">
-                    <BookOpen className="h-12 w-12 text-primary/30" />
-                  </div>
-                )}
-                <div className="flex flex-col justify-center p-8 lg:p-10">
+              <article className="card-ngo card-lift mb-10 overflow-hidden sm:mb-12 lg:grid lg:grid-cols-2">
+                <BlogCover
+                  src={featured.featured_image_url}
+                  size="large"
+                  className="aspect-[16/10] w-full object-cover lg:aspect-auto lg:min-h-[320px]"
+                />
+                <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                     Latest ·{" "}
                     {featured.published_at
@@ -104,20 +137,12 @@ function Blog() {
                     <Link
                       key={p.id}
                       to="/blog"
-                      className="card-ngo group overflow-hidden transition-shadow hover:shadow-soft"
+                      className="card-ngo card-lift group overflow-hidden"
                     >
-                      {p.featured_image_url ? (
-                        <img
-                          src={p.featured_image_url}
-                          alt=""
-                          loading="lazy"
-                          className="aspect-video w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex aspect-video items-center justify-center bg-primary/5">
-                          <BookOpen className="h-8 w-8 text-primary/30" />
-                        </div>
-                      )}
+                      <BlogCover
+                        src={p.featured_image_url}
+                        className="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
                       <div className="p-5">
                         <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                           {p.published_at

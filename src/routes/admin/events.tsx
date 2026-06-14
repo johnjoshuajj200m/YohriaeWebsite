@@ -137,6 +137,7 @@ function AdminEvents() {
       organizer?: string;
       registration_link?: string;
       event_status?: EventForm["event_status"];
+      status?: string;
     };
     setForm({
       id: event.id,
@@ -149,7 +150,7 @@ function AdminEvents() {
       organizer: e.organizer ?? "",
       registration_link: e.registration_link ?? "",
       image_url: event.image_url ?? "",
-      event_status: e.event_status ?? "upcoming",
+      event_status: (e.event_status ?? e.status ?? "upcoming") as EventForm["event_status"],
       published: event.published,
     });
     setOpen(true);

@@ -26,25 +26,23 @@ function AdminUsers() {
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const [rolesRes, profilesRes, invitesRes] = await Promise.all([
-        supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
+      const [adminsRes, profilesRes] = await Promise.all([
+        supabase.from("admins").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*"),
-        supabase.from("admin_invites").select("*").order("created_at", { ascending: false }),
       ]);
-      if (rolesRes.error) throw rolesRes.error;
+      if (adminsRes.error) throw adminsRes.error;
       if (profilesRes.error) throw profilesRes.error;
-      if (invitesRes.error) throw invitesRes.error;
 
       const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
 
-      return (rolesRes.data ?? []).map((r) => {
-        const profile = profileMap.get(r.user_id);
+      return (adminsRes.data ?? []).map((admin) => {
+        const profile = profileMap.get(admin.user_id);
         return {
-          roleId: r.id,
-          userId: r.user_id,
-          role: r.role,
-          email: (profile as { email?: string } | undefined)?.email ?? "—",
-          displayName: profile?.display_name ?? "—",
+          roleId: admin.id,
+          userId: admin.user_id,
+          role: admin.role,
+          email: admin.email ?? (profile as { email?: string } | undefined)?.email ?? "—",
+          displayName: profile?.display_name ?? admin.email ?? "—",
           lastLogin: (profile as { last_login_at?: string } | undefined)?.last_login_at,
           isActive: (profile as { is_active?: boolean } | undefined)?.is_active ?? true,
         };
@@ -88,8 +86,12 @@ function AdminUsers() {
 
   const removeRoleMutation = useMutation({
     mutationFn: async (roleId: string) => {
-      const { error } = await supabase.from("user_roles").delete().eq("id", roleId);
-      if (error) throw error;
+      const { error: adminError } = await supabase.from("admins").delete().eq("id", roleId);
+      if (adminError) throw adminError;
+      const target = users.find((u) => u.roleId === roleId);
+      if (target) {
+        await supabase.from("user_roles").delete().eq("user_id", target.userId);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });

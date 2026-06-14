@@ -29,6 +29,23 @@ export function HeroSection() {
           <div className="absolute inset-0 hero-scrim hidden md:block" />
           {/* On small screens use a softer vertical scrim so the photo still shows */}
           <div className="absolute inset-0 hero-scrim-vertical md:hidden" />
+
+          {/* Subtle floating brand orbits — desktop only to stay readable on mobile */}
+          <span
+            aria-hidden
+            className="orbit-shape orbit-magenta hidden h-72 w-72 md:block"
+            style={{ top: "12%", left: "55%" }}
+          />
+          <span
+            aria-hidden
+            className="orbit-shape orbit-cyan hidden h-56 w-56 md:block"
+            style={{ bottom: "8%", left: "70%" }}
+          />
+          <span
+            aria-hidden
+            className="orbit-shape orbit-gold hidden h-40 w-40 lg:block"
+            style={{ top: "55%", left: "42%" }}
+          />
         </div>
 
         <div className="relative mx-auto flex min-h-[inherit] max-w-7xl items-center px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">

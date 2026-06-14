@@ -3,7 +3,7 @@ import { logo } from "@/assets/images";
 
 export function Logo({
   className = "",
-  imageClassName = "h-11 w-auto lg:h-[55px]",
+  imageClassName = "h-[3.25rem] w-auto sm:h-14 lg:h-[3.75rem]",
 }: {
   className?: string;
   imageClassName?: string;

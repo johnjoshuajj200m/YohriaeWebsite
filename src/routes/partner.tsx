@@ -103,6 +103,7 @@ function Partner() {
               </a>
               <Link
                 to="/contact"
+                hash="contact-form"
                 onClick={() => analyticsEvents.partnerClick("partner_use_contact_form")}
                 className="btn-outline justify-center"
               >

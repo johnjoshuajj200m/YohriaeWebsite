@@ -20,19 +20,23 @@ export function Footer() {
   const settings = useSiteSettings();
 
   return (
-    <footer className="mt-auto border-t border-border bg-[#0a2540] text-white">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr]">
+    <footer className="footer-dark mt-auto bg-[#0a2540]">
+      <div className="h-[3px] w-full bg-gradient-to-r from-[var(--brand-magenta)] via-[var(--brand-cyan)] to-[var(--brand-gold)]" />
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
+        {/* Brand + link columns */}
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_2fr] lg:gap-10">
           <div>
-            <Logo imageClassName="h-14 brightness-0 invert sm:h-16" />
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/75">
+            <Logo imageClassName="h-[4.25rem] w-auto brightness-0 invert sm:h-[4.75rem]" />
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/80">
               {settings.longName}. {settings.footerText}
             </p>
-            <p className="mt-3 text-xs text-white/55">{SITE.registration}</p>
+            <p className="footer-heading mt-4 !text-[0.625rem] !tracking-[0.14em]">
+              {SITE.registration}
+            </p>
             <p className="mt-1 text-xs text-white/55">Est. {SITE.founded}</p>
           </div>
 
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-2 md:grid-cols-4 md:gap-x-6">
             <FooterColumn title="About" links={FOOTER_LINKS.about} />
             <FooterColumn title="Programs" links={FOOTER_LINKS.programs} />
             <FooterColumn title="Resources" links={FOOTER_LINKS.resources} />
@@ -40,44 +44,50 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-14 grid gap-10 border-t border-white/10 pt-14 lg:grid-cols-[1fr_1.2fr]">
+        {/* Contact + newsletter */}
+        <div className="mt-8 grid gap-8 border-t border-white/10 pt-8 lg:mt-10 lg:grid-cols-[1fr_1.15fr] lg:gap-10 lg:pt-10">
           <div>
-            <h3 className="text-sm font-semibold">Contact</h3>
-            <ul className="mt-4 space-y-3 text-sm text-white/75">
+            <h3 className="footer-heading">Contact</h3>
+            <ul className="mt-3 space-y-2.5 text-sm">
               <li className="flex items-start gap-2.5">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
-                <span>
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-cyan)]" />
+                <span className="text-white/80">
                   {settings.address}
                   <br />
                   {settings.location}
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
-                <a href={`mailto:${settings.email}`} className="hover:text-white">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-cyan)]" />
+                <a href={`mailto:${settings.email}`} className="footer-link break-all">
                   {settings.email}
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
-                <AtSign className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
-                <a href={`mailto:${settings.secondaryEmail}`} className="hover:text-white">
+                <AtSign className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-cyan)]" />
+                <a href={`mailto:${settings.secondaryEmail}`} className="footer-link break-all">
                   {settings.secondaryEmail}
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
-                <a href={toTelHref(settings.phone)} className="hover:text-white">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-cyan)]" />
+                <a href={toTelHref(settings.phone)} className="footer-link">
                   {settings.phone}
                 </a>
               </li>
               <li className="flex items-start gap-2.5">
-                <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-white/50" />
-                <a href={toWhatsAppHref(settings.whatsapp)} className="hover:text-white">
+                <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-cyan)]" />
+                <a
+                  href={toWhatsAppHref(settings.whatsapp)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="footer-link"
+                >
                   {settings.whatsapp}
                 </a>
               </li>
             </ul>
-            <div className="mt-5 flex gap-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               {[
                 { href: settings.social.instagram, label: "Instagram", Icon: Instagram },
                 { href: settings.social.facebook, label: "Facebook", Icon: Facebook },
@@ -91,7 +101,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-white/15 text-white/70 transition-colors hover:border-white/30 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/20 text-white/75 transition-colors hover:border-[var(--brand-cyan)] hover:bg-white/5 hover:text-white"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -102,10 +112,8 @@ export function Footer() {
           <Newsletter variant="dark" />
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-8 text-xs text-white/50 sm:flex-row sm:items-center">
-          <p>
-            © {new Date().getFullYear()} {SITE.name}. All rights reserved.
-          </p>
+        <div className="mt-8 flex flex-col items-start justify-between gap-2 border-t border-white/10 pt-6 text-xs text-white/55 sm:flex-row sm:items-center">
+          <p>© {new Date().getFullYear()} {SITE.name}. All rights reserved.</p>
           <p>{SITE.longName}</p>
         </div>
       </div>
@@ -122,11 +130,11 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <ul className="mt-3 space-y-2.5 text-sm">
+      <h3 className="footer-heading">{title}</h3>
+      <ul className="mt-2.5 space-y-2 text-sm">
         {links.map((l) => (
           <li key={`${title}-${l.label}`}>
-            <Link to={l.to} className="text-white/70 transition-colors hover:text-white">
+            <Link to={l.to} className="footer-link">
               {l.label}
             </Link>
           </li>
