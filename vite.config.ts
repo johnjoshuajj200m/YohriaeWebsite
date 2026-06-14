@@ -12,4 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Force Nitro on with the Vercel preset so production builds emit a
+  // Build Output API v3 bundle at `.vercel/output/`. Vercel auto-detects this
+  // (no Framework Preset / Output Directory config needed in the Vercel UI).
+  // Outside this preset (e.g. local `npm run build` for inspection) Nitro is
+  // still enabled; switch the preset via the NITRO_PRESET env var if needed.
+  nitro: {
+    preset: "vercel",
+  },
 });
