@@ -62,9 +62,9 @@ function Blog() {
           <>
             {featured && (
               <article className="card-ngo mb-12 overflow-hidden lg:grid lg:grid-cols-2">
-                {featured.cover_url ? (
+                {featured.featured_image_url ? (
                   <img
-                    src={featured.cover_url}
+                    src={featured.featured_image_url}
                     alt=""
                     loading="lazy"
                     className="aspect-[16/10] w-full object-cover lg:aspect-auto lg:min-h-[320px]"
@@ -106,9 +106,9 @@ function Blog() {
                       to="/blog"
                       className="card-ngo group overflow-hidden transition-shadow hover:shadow-soft"
                     >
-                      {p.cover_url ? (
+                      {p.featured_image_url ? (
                         <img
-                          src={p.cover_url}
+                          src={p.featured_image_url}
                           alt=""
                           loading="lazy"
                           className="aspect-video w-full object-cover"

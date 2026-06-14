@@ -92,7 +92,7 @@ function Home() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id, title, starts_at, location, description, cover_url")
+        .select("id, title, starts_at, location, description, image_url")
         .eq("published", true)
         .order("starts_at", { ascending: false })
         .limit(3);
@@ -106,7 +106,7 @@ function Home() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_posts")
-        .select("id, title, excerpt, published_at, cover_url")
+        .select("id, title, excerpt, published_at, featured_image_url")
         .eq("published", true)
         .order("published_at", { ascending: false, nullsFirst: false })
         .limit(3);
@@ -346,9 +346,9 @@ function Home() {
                       className="card-ngo card-lift group block overflow-hidden"
                     >
                       <div className="grid sm:grid-cols-[120px_1fr]">
-                        {p.cover_url ? (
+                        {p.featured_image_url ? (
                           <img
-                            src={p.cover_url}
+                            src={p.featured_image_url}
                             alt=""
                             loading="lazy"
                             className="aspect-video h-full w-full object-cover sm:aspect-auto"

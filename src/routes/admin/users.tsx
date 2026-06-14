@@ -134,40 +134,77 @@ function AdminUsers() {
       ) : users.length === 0 ? (
         <EmptyState title="No admin users yet" description="Add the first approved admin by email invitation." />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-background">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-surface text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Last login</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.roleId} className="border-b border-border/70">
-                  <td className="px-4 py-3 font-semibold">{u.displayName}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                  <td className="px-4 py-3">{roleLabel(u.role)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(u.lastLogin)}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={u.isActive ? "active" : "inactive"} />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {u.userId !== userId && (
-                      <button type="button" onClick={() => setRemoveRoleId(u.roleId)} className="rounded-md p-2 text-destructive hover:bg-destructive/10">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </td>
+        <>
+          {/* Mobile cards */}
+          <div className="space-y-3 md:hidden">
+            {users.map((u) => (
+              <article key={u.roleId} className="card-ngo p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-semibold">{u.displayName}</p>
+                    <p className="break-all text-xs text-muted-foreground">{u.email}</p>
+                  </div>
+                  <StatusBadge status={u.isActive ? "active" : "inactive"} />
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <dt className="text-muted-foreground">Role</dt>
+                    <dd className="font-medium">{roleLabel(u.role)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Last login</dt>
+                    <dd className="font-medium">{formatDate(u.lastLogin)}</dd>
+                  </div>
+                </dl>
+                {u.userId !== userId && (
+                  <button
+                    type="button"
+                    onClick={() => setRemoveRoleId(u.roleId)}
+                    className="mt-3 inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Remove access
+                  </button>
+                )}
+              </article>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden overflow-hidden rounded-xl border border-border bg-background md:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-surface text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Last login</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.roleId} className="border-b border-border/70">
+                    <td className="px-4 py-3 font-semibold">{u.displayName}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                    <td className="px-4 py-3">{roleLabel(u.role)}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatDate(u.lastLogin)}</td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={u.isActive ? "active" : "inactive"} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {u.userId !== userId && (
+                        <button type="button" onClick={() => setRemoveRoleId(u.roleId)} className="rounded-md p-2 text-destructive hover:bg-destructive/10">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>

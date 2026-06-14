@@ -98,7 +98,7 @@ function EventCard({
     starts_at: string;
     location: string | null;
     description: string | null;
-    cover_url: string | null;
+    image_url: string | null;
     registration_link: string | null;
   };
   highlight?: boolean;
@@ -106,8 +106,8 @@ function EventCard({
   return (
     <li className={`card-ngo overflow-hidden ${highlight ? "border-primary/30" : ""}`}>
       <div className="grid gap-0 sm:grid-cols-[180px_1fr]">
-        {e.cover_url ? (
-          <img src={e.cover_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+        {e.image_url ? (
+          <img src={e.image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
         ) : (
           <div className="flex aspect-video items-center justify-center bg-primary/5 sm:aspect-auto">
             <Calendar className="h-10 w-10 text-primary/40" />

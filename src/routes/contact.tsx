@@ -3,6 +3,7 @@ import { PageHero } from "@/components/PageHero";
 import { Facebook, Instagram, Linkedin, Mail, MapPin, MessageCircle, Music2, Phone, Send, CheckCircle2, Twitter } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { analyticsEvents } from "@/lib/analytics";
 import { toTelHref, toWhatsAppHref, useSiteSettings } from "@/lib/site-settings";
@@ -65,10 +66,15 @@ function Contact() {
     });
     if (error) {
       setState("error");
-      setErrorMsg(error.message);
+      const msg =
+        error.message ||
+        "Could not send your message. Please email yohriae2019@gmail.com directly.";
+      setErrorMsg(msg);
+      toast.error(msg);
       return;
     }
     analyticsEvents.contactSubmission();
+    toast.success("Message sent. We'll get back to you soon.");
     setState("sent");
     (e.target as HTMLFormElement).reset();
   }
@@ -175,13 +181,27 @@ function Contact() {
                 Quick Actions
               </h2>
               <div className="mt-4 grid gap-2">
-                <a href={toTelHref(settings.phone)} className="btn-primary justify-center">
+                <a
+                  href={toTelHref(settings.phone)}
+                  onClick={() => analyticsEvents.contactChannel("phone", "contact_quick_actions")}
+                  className="btn-primary justify-center"
+                >
                   <Phone className="h-4 w-4" /> Call Now
                 </a>
-                <a href={`mailto:${settings.email}`} className="btn-outline justify-center">
+                <a
+                  href={`mailto:${settings.email}`}
+                  onClick={() => analyticsEvents.contactChannel("email", "contact_quick_actions")}
+                  className="btn-outline justify-center"
+                >
                   <Mail className="h-4 w-4" /> Send Email
                 </a>
-                <a href={toWhatsAppHref(settings.whatsapp)} target="_blank" rel="noreferrer" className="btn-outline justify-center">
+                <a
+                  href={toWhatsAppHref(settings.whatsapp)}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => analyticsEvents.contactChannel("whatsapp", "contact_quick_actions")}
+                  className="btn-outline justify-center"
+                >
                   <MessageCircle className="h-4 w-4" /> WhatsApp Chat
                 </a>
               </div>

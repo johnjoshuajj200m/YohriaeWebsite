@@ -10,7 +10,9 @@ const MOBILE_LINKS = [
   { to: "/admin/analytics", label: "Analytics" },
   { to: "/admin/blog", label: "Blog" },
   { to: "/admin/events", label: "Events" },
+  { to: "/admin/gallery", label: "Gallery" },
   { to: "/admin/messages", label: "Messages" },
+  { to: "/admin/newsletter", label: "Newsletter" },
   { to: "/admin/users", label: "Users" },
 ];
 
@@ -69,19 +71,27 @@ function AdminShell() {
             </Link>
           </div>
           <nav className="flex gap-2 overflow-x-auto px-4 pb-3">
-            {MOBILE_LINKS.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                  pathname === item.to || (item.to !== "/admin" && pathname.startsWith(item.to))
-                    ? "bg-primary/10 text-primary"
-                    : "bg-surface text-muted-foreground"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {MOBILE_LINKS.map((item) => {
+              const active =
+                pathname === item.to ||
+                (item.to !== "/admin" && pathname.startsWith(item.to));
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "bg-surface text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {active && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--brand-magenta)]" />
+                  )}
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         </header>
         <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">

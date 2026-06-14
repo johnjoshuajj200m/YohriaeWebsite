@@ -43,7 +43,7 @@ export type Database = {
           author: string | null
           category: string | null
           content: string
-          cover_url: string | null
+          featured_image_url: string | null
           created_at: string
           excerpt: string | null
           id: string
@@ -57,7 +57,7 @@ export type Database = {
           author?: string | null
           category?: string | null
           content: string
-          cover_url?: string | null
+          featured_image_url?: string | null
           created_at?: string
           excerpt?: string | null
           id?: string
@@ -71,7 +71,7 @@ export type Database = {
           author?: string | null
           category?: string | null
           content?: string
-          cover_url?: string | null
+          featured_image_url?: string | null
           created_at?: string
           excerpt?: string | null
           id?: string
@@ -247,7 +247,7 @@ export type Database = {
       }
       events: {
         Row: {
-          cover_url: string | null
+          image_url: string | null
           created_at: string
           description: string | null
           ends_at: string | null
@@ -264,7 +264,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          cover_url?: string | null
+          image_url?: string | null
           created_at?: string
           description?: string | null
           ends_at?: string | null
@@ -281,7 +281,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          cover_url?: string | null
+          image_url?: string | null
           created_at?: string
           description?: string | null
           ends_at?: string | null

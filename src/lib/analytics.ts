@@ -48,6 +48,8 @@ export const analyticsEvents = {
     trackEvent("donate_click", { location, amount, recurring }),
   partnerClick: (location: string) => trackEvent("partner_with_us_click", { location }),
   contactSubmission: () => trackEvent("contact_form_submission"),
+  contactChannel: (channel: "email" | "phone" | "whatsapp", location: string) =>
+    trackEvent("contact_channel_click", { channel, location }),
   eventRegistration: (eventTitle: string, eventId: string) =>
     trackEvent("event_registration_click", { event_title: eventTitle, event_id: eventId }),
 };

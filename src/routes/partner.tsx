@@ -3,6 +3,7 @@ import { Handshake, Mail, MessageCircle, Phone } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SITE } from "@/lib/site-config";
+import { analyticsEvents } from "@/lib/analytics";
 import { toTelHref, toWhatsAppHref, useSiteSettings } from "@/lib/site-settings";
 
 export const Route = createFileRoute("/partner")({
@@ -74,21 +75,37 @@ function Partner() {
               Reach the YOHRIAE team through official channels.
             </p>
             <div className="mt-5 grid gap-2">
-              <a href={`mailto:${settings.email}`} className="btn-primary justify-center">
+              <a
+                href={`mailto:${settings.email}`}
+                onClick={() => {
+                  analyticsEvents.partnerClick("partner_page");
+                  analyticsEvents.contactChannel("email", "partner_page");
+                }}
+                className="btn-primary justify-center"
+              >
                 <Mail className="h-4 w-4" /> Send Email
               </a>
-              <a href={toTelHref(settings.phone)} className="btn-outline justify-center">
+              <a
+                href={toTelHref(settings.phone)}
+                onClick={() => analyticsEvents.contactChannel("phone", "partner_page")}
+                className="btn-outline justify-center"
+              >
                 <Phone className="h-4 w-4" /> Call Now
               </a>
               <a
                 href={toWhatsAppHref(settings.whatsapp)}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => analyticsEvents.contactChannel("whatsapp", "partner_page")}
                 className="btn-outline justify-center"
               >
                 <MessageCircle className="h-4 w-4" /> WhatsApp Chat
               </a>
-              <Link to="/contact" className="btn-outline justify-center">
+              <Link
+                to="/contact"
+                onClick={() => analyticsEvents.partnerClick("partner_use_contact_form")}
+                className="btn-outline justify-center"
+              >
                 Use Contact Form
               </Link>
             </div>
