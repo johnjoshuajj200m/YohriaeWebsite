@@ -5,31 +5,33 @@ export function PageHero({
   title,
   description,
   children,
+  compact,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   children?: ReactNode;
+  compact?: boolean;
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-secondary/40 to-background">
-      <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/15 blur-3xl" aria-hidden />
-      <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-brand-cyan/15 blur-3xl" aria-hidden />
-      <div className="relative mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-24 lg:px-8">
-        {eyebrow && (
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] brand-gradient-text">
-            {eyebrow}
-          </p>
-        )}
-        <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl">
-          {title}
-        </h1>
-        {description && (
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            {description}
-          </p>
-        )}
-        {children && <div className="mt-8">{children}</div>}
+    <section className="border-b border-border bg-surface">
+      <div
+        className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${
+          compact ? "py-12 sm:py-14" : "py-14 sm:py-16 lg:py-20"
+        }`}
+      >
+        <div className="max-w-3xl">
+          {eyebrow && <p className="text-eyebrow">{eyebrow}</p>}
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            {title}
+          </h1>
+          {description && (
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+              {description}
+            </p>
+          )}
+          {children && <div className="mt-7">{children}</div>}
+        </div>
       </div>
     </section>
   );

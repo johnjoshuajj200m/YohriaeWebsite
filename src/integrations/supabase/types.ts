@@ -14,9 +14,34 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author: string | null
+          category: string | null
           content: string
           cover_url: string | null
           created_at: string
@@ -30,6 +55,7 @@ export type Database = {
         }
         Insert: {
           author?: string | null
+          category?: string | null
           content: string
           cover_url?: string | null
           created_at?: string
@@ -43,6 +69,7 @@ export type Database = {
         }
         Update: {
           author?: string | null
+          category?: string | null
           content?: string
           cover_url?: string | null
           created_at?: string
@@ -64,6 +91,7 @@ export type Database = {
           id: string
           message: string
           name: string
+          status: string
           subject: string | null
         }
         Insert: {
@@ -73,6 +101,7 @@ export type Database = {
           id?: string
           message: string
           name: string
+          status?: string
           subject?: string | null
         }
         Update: {
@@ -82,7 +111,98 @@ export type Database = {
           id?: string
           message?: string
           name?: string
+          status?: string
           subject?: string | null
+        }
+        Relationships: []
+      }
+      admin_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      analytics_summary: {
+        Row: {
+          countries: Json
+          created_at: string
+          devices: Json
+          id: string
+          page_views: number
+          summary_date: string
+          today_visits: number
+          top_pages: Json
+          total_visits: number
+          traffic_sources: Json
+          updated_at: string
+          visitors_series: Json
+        }
+        Insert: {
+          countries?: Json
+          created_at?: string
+          devices?: Json
+          id?: string
+          page_views?: number
+          summary_date: string
+          today_visits?: number
+          top_pages?: Json
+          total_visits?: number
+          traffic_sources?: Json
+          updated_at?: string
+          visitors_series?: Json
+        }
+        Update: {
+          countries?: Json
+          created_at?: string
+          devices?: Json
+          id?: string
+          page_views?: number
+          summary_date?: string
+          today_visits?: number
+          top_pages?: Json
+          total_visits?: number
+          traffic_sources?: Json
+          updated_at?: string
+          visitors_series?: Json
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
         }
         Relationships: []
       }
@@ -131,9 +251,13 @@ export type Database = {
           created_at: string
           description: string | null
           ends_at: string | null
+          event_status: string
+          event_time: string | null
           id: string
           location: string | null
+          organizer: string | null
           published: boolean
+          registration_link: string | null
           slug: string
           starts_at: string
           title: string
@@ -144,9 +268,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           ends_at?: string | null
+          event_status?: string
+          event_time?: string | null
           id?: string
           location?: string | null
+          organizer?: string | null
           published?: boolean
+          registration_link?: string | null
           slug: string
           starts_at: string
           title: string
@@ -157,9 +285,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           ends_at?: string | null
+          event_status?: string
+          event_time?: string | null
           id?: string
           location?: string | null
+          organizer?: string | null
           published?: boolean
+          registration_link?: string | null
           slug?: string
           starts_at?: string
           title?: string
@@ -199,21 +331,30 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
+          is_active: boolean
+          last_login_at: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id: string
+          is_active?: boolean
+          last_login_at?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
+          is_active?: boolean
+          last_login_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -254,6 +395,66 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          address: string
+          email: string
+          executive_director: string
+          facebook: string
+          footer_text: string
+          id: string
+          instagram: string
+          linkedin: string
+          location: string
+          long_name: string
+          name: string
+          phone: string
+          secondary_email: string
+          tiktok: string
+          twitter: string
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          address?: string
+          email?: string
+          executive_director?: string
+          facebook?: string
+          footer_text?: string
+          id?: string
+          instagram?: string
+          linkedin?: string
+          location?: string
+          long_name?: string
+          name?: string
+          phone?: string
+          secondary_email?: string
+          tiktok?: string
+          twitter?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Update: {
+          address?: string
+          email?: string
+          executive_director?: string
+          facebook?: string
+          footer_text?: string
+          id?: string
+          instagram?: string
+          linkedin?: string
+          location?: string
+          long_name?: string
+          name?: string
+          phone?: string
+          secondary_email?: string
+          tiktok?: string
+          twitter?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -289,7 +490,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "editor"
+      app_role: "admin" | "editor" | "viewer" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -417,7 +618,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "editor"],
+      app_role: ["admin", "editor", "viewer", "super_admin"],
     },
   },
 } as const

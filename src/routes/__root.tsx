@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,12 +14,13 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { initializeAnalytics, trackPageView } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-black brand-gradient-text">404</h1>
+        <h1 className="text-7xl font-bold text-primary">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
@@ -26,7 +28,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-full brand-gradient px-5 py-2.5 text-sm font-semibold text-white"
+            className="btn-primary"
           >
             Back to YOHRIAE
           </Link>
@@ -79,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "YOHRIAE — Youth Health and Rights Initiative" },
+      { title: "YOHRIAE — Youth Health and Right Initiative for Advocacy and Empowerment" },
       {
         name: "description",
         content:
@@ -88,18 +90,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "YOHRIAE" },
       { property: "og:site_name", content: "YOHRIAE" },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "YOHRIAE — Youth Health and Rights Initiative" },
+      { property: "og:title", content: "YOHRIAE — Youth Health and Right Initiative for Advocacy and Empowerment" },
       {
         property: "og:description",
         content:
           "Health, human rights, advocacy and sustainable development for young people and vulnerable communities in Northern Nigeria.",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#c026d3" },
-      { name: "twitter:title", content: "YOHRIAE — Youth Health and Rights Initiative" },
-      { name: "description", content: "A modern NGO website for Yohriae, featuring responsive design, event management, and donation processing." },
-      { property: "og:description", content: "A modern NGO website for Yohriae, featuring responsive design, event management, and donation processing." },
-      { name: "twitter:description", content: "A modern NGO website for Yohriae, featuring responsive design, event management, and donation processing." },
+      { name: "theme-color", content: "#0F4C81" },
+      { name: "twitter:title", content: "YOHRIAE — Youth Health and Right Initiative for Advocacy and Empowerment" },
+      { name: "description", content: "YOHRIAE advances youth health, human rights, advocacy, and community empowerment across Northern Nigeria." },
+      { property: "og:description", content: "YOHRIAE advances youth health, human rights, advocacy, and community empowerment across Northern Nigeria." },
+      { name: "twitter:description", content: "YOHRIAE advances youth health, human rights, advocacy, and community empowerment across Northern Nigeria." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/455a4834-473e-498a-96ee-f27782a83a37/id-preview-7228dcee--bc2d6ffa-72f5-4f13-b479-e0b873f18d0e.lovable.app-1781368796558.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/455a4834-473e-498a-96ee-f27782a83a37/id-preview-7228dcee--bc2d6ffa-72f5-4f13-b479-e0b873f18d0e.lovable.app-1781368796558.png" },
     ],
@@ -109,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Archivo+Black&family=Hind:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap",
       },
     ],
     scripts: [
@@ -119,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "NGO",
           name: "YOHRIAE",
-          alternateName: "Youth Health and Rights Initiative for Advocacy and Empowerment",
+          alternateName: "Youth Health and Right Initiative for Advocacy and Empowerment",
           url: "/",
           areaServed: "Northern Nigeria",
           foundingDate: "2019",
@@ -152,6 +154,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const location = useLocation();
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -161,6 +164,14 @@ function RootComponent() {
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
+
+  useEffect(() => {
+    initializeAnalytics();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(location.href);
+  }, [location.href]);
 
   return (
     <QueryClientProvider client={queryClient}>

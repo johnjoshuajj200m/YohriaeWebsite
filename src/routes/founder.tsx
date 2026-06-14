@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHero } from "@/components/PageHero";
 import { Quote } from "lucide-react";
+import { IMAGES } from "@/assets/images";
+import { SITE } from "@/lib/site-config";
 
 export const Route = createFileRoute("/founder")({
   head: () => ({
     meta: [
       { title: "Founder — YOHRIAE" },
-      { name: "description", content: "Meet the founder of YOHRIAE and learn about the vision that shapes our work across Northern Nigeria." },
+      {
+        name: "description",
+        content:
+          "Meet the founder of YOHRIAE and learn about the vision that shapes our work across Northern Nigeria.",
+      },
       { property: "og:title", content: "Meet the YOHRIAE Founder" },
       { property: "og:url", content: "/founder" },
     ],
@@ -18,24 +24,31 @@ export const Route = createFileRoute("/founder")({
 function Founder() {
   return (
     <>
-      <PageHero eyebrow="Leadership" title="A vision born of community" description="The story behind YOHRIAE and the conviction that drives our work." />
+      <PageHero
+        eyebrow="Leadership"
+        title="A vision born of community"
+        description="The story behind YOHRIAE and the conviction that drives our work."
+      />
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1fr_2fr]">
           <div>
-            <div className="aspect-[4/5] w-full overflow-hidden rounded-3xl brand-gradient">
-              <div className="flex h-full w-full items-center justify-center bg-black/10 text-white">
-                <span className="text-7xl font-black">Y</span>
-              </div>
-            </div>
-            <p className="mt-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Founder & Executive Director</p>
+            <img
+              src={IMAGES.founder}
+              alt="YOHRIAE founder at a community advocacy session"
+              loading="lazy"
+              className="aspect-[4/5] w-full rounded-lg object-cover"
+            />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Executive Director: {SITE.executiveDirector}
+            </p>
           </div>
           <div>
-            <Quote className="h-8 w-8 text-primary" />
-            <blockquote className="mt-3 text-2xl font-display leading-snug text-foreground sm:text-3xl">
-              "Communities are not problems to be solved. They are leaders waiting for the
-              opportunity to shape their own futures."
+            <Quote className="h-7 w-7 text-primary" />
+            <blockquote className="mt-3 text-xl font-semibold leading-snug text-foreground sm:text-2xl">
+              &ldquo;Communities are not problems to be solved. They are leaders waiting for the
+              opportunity to shape their own futures.&rdquo;
             </blockquote>
-            <div className="prose prose-lg mt-8 max-w-none">
+            <div className="mt-8 max-w-none">
               <p className="text-base leading-relaxed text-muted-foreground">
                 YOHRIAE was founded in 2019 in response to the urgent gaps young people and
                 vulnerable communities in Northern Nigeria faced in accessing health, exercising
@@ -49,8 +62,8 @@ function Founder() {
                 Everything YOHRIAE does — from peer education in clinics to advocacy with
                 policymakers — flows from that founding belief.
               </p>
-              <p className="mt-4 text-sm italic text-muted-foreground">
-                A full biography and message from the founder will be published here.
+              <p className="mt-4 text-sm font-semibold text-primary">
+                Executive Director: {SITE.executiveDirector}
               </p>
             </div>
           </div>

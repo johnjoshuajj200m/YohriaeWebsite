@@ -1,26 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { X } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
+import { SectionHeader } from "@/components/SectionHeader";
+import { GALLERY } from "@/assets/images";
 import { supabase } from "@/integrations/supabase/client";
-import heroImg from "@/assets/hero-community.jpg";
-import a from "@/assets/program-advocacy.jpg";
-import b from "@/assets/program-health.jpg";
-import c from "@/assets/program-youth.jpg";
-import d from "@/assets/program-gbv.jpg";
-
-const FALLBACK = [
-  { id: "f1", image_url: heroImg, caption: "Community gathering" },
-  { id: "f2", image_url: a, caption: "Advocacy session" },
-  { id: "f3", image_url: b, caption: "Health outreach" },
-  { id: "f4", image_url: c, caption: "Youth training" },
-  { id: "f5", image_url: d, caption: "Community dialogue" },
-];
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
     meta: [
       { title: "Gallery — YOHRIAE" },
-      { name: "description", content: "Photographs from YOHRIAE programs, events and community moments." },
+      {
+        name: "description",
+        content:
+          "Photographs from YOHRIAE programs, events and community engagement across Northern Nigeria.",
+      },
       { property: "og:title", content: "YOHRIAE Gallery" },
       { property: "og:url", content: "/gallery" },
     ],
@@ -29,7 +24,31 @@ export const Route = createFileRoute("/gallery")({
   component: Gallery,
 });
 
+type GalleryImage = { id: string; image_url: string; caption?: string | null };
+const CATEGORIES = ["All", "Health", "Advocacy", "Training", "Youth", "Partnerships"] as const;
+
+function getCategory(caption?: string | null) {
+  const value = (caption ?? "").toLowerCase();
+  if (value.includes("health") || value.includes("aids") || value.includes("hiv")) return "Health";
+  if (value.includes("rights") || value.includes("advocacy") || value.includes("paralegal")) {
+    return "Advocacy";
+  }
+  if (value.includes("training") || value.includes("workshop") || value.includes("capacity")) {
+    return "Training";
+  }
+  if (value.includes("academy") || value.includes("youth") || value.includes("football")) {
+    return "Youth";
+  }
+  if (value.includes("partner") || value.includes("leaders") || value.includes("joint")) {
+    return "Partnerships";
+  }
+  return "Advocacy";
+}
+
 function Gallery() {
+  const [lightbox, setLightbox] = useState<GalleryImage | null>(null);
+  const [active, setActive] = useState<(typeof CATEGORIES)[number]>("All");
+
   const { data: images = [] } = useQuery({
     queryKey: ["gallery-public"],
     queryFn: async () => {
@@ -43,34 +62,104 @@ function Gallery() {
     },
   });
 
-  const list = images.length > 0 ? images : FALLBACK;
+  const fallback = GALLERY.map((g) => ({
+    id: g.id,
+    image_url: g.src,
+    caption: g.caption,
+  }));
+
+  const list: GalleryImage[] = images.length > 0 ? images : fallback;
+  const filtered =
+    active === "All" ? list : list.filter((img) => getCategory(img.caption) === active);
 
   return (
     <>
       <PageHero
         eyebrow="Gallery"
         title="Moments from the field"
-        description="Snapshots from our programs, trainings and community engagements."
+        description="Real photographs from our programs, trainings, and community engagements."
+        compact
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {list.map((img) => (
-            <figure key={img.id} className="group relative overflow-hidden rounded-xl bg-secondary">
-              <img
-                src={img.image_url}
-                alt={img.caption ?? ""}
-                loading="lazy"
-                className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              {img.caption && (
-                <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-full bg-gradient-to-t from-black/80 to-transparent p-3 text-xs font-semibold text-white transition-transform duration-300 group-hover:translate-y-0">
-                  {img.caption}
-                </figcaption>
-              )}
+        <div className="mb-10 flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between">
+          <SectionHeader
+            eyebrow="Documentary archive"
+            title="Programs, trainings, outreach, and partners"
+            description="Browse field moments by collection. These images help donors and partners see the real work behind the reports."
+          />
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setActive(category)}
+                className={`rounded-sm border px-3 py-2 text-xs font-semibold transition-colors ${
+                  active === category
+                    ? "border-primary bg-primary text-white"
+                    : "border-border bg-background text-muted-foreground hover:border-primary hover:text-primary"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((img) => (
+            <figure key={img.id} className="card-ngo group overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setLightbox(img)}
+                className="block w-full text-left"
+                aria-label={img.caption ? `View: ${img.caption}` : "View image"}
+              >
+                <img
+                  src={img.image_url}
+                  alt={img.caption ?? ""}
+                  loading="lazy"
+                  className="aspect-[4/3] w-full object-cover"
+                />
+                {img.caption && (
+                  <figcaption className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
+                    {img.caption}
+                  </figcaption>
+                )}
+              </button>
             </figure>
           ))}
         </div>
       </section>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image lightbox"
+          onClick={() => setLightbox(null)}
+          onKeyDown={(e) => e.key === "Escape" && setLightbox(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute right-4 top-4 rounded-sm p-2 text-white/80 hover:bg-white/10 hover:text-white"
+            aria-label="Close lightbox"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <div className="max-h-[90vh] max-w-5xl" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={lightbox.image_url}
+              alt={lightbox.caption ?? ""}
+              className="max-h-[85vh] w-full rounded-sm object-contain"
+            />
+            {lightbox.caption && (
+              <p className="mt-3 text-center text-sm text-white/80">{lightbox.caption}</p>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

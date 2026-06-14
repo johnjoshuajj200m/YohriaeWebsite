@@ -1,17 +1,27 @@
-import logo from "@/assets/yohriae-logo.png.asset.json";
 import { Link } from "@tanstack/react-router";
+import { logo } from "@/assets/images";
 
-export function Logo({ className = "" }: { className?: string }) {
+export function Logo({
+  className = "",
+  imageClassName = "h-11 w-auto sm:h-12 md:h-14 lg:h-16 xl:h-[4.375rem]",
+}: {
+  className?: string;
+  imageClassName?: string;
+}) {
   return (
-    <Link to="/" className={`inline-flex items-center gap-2 ${className}`} aria-label="YOHRIAE home">
+    <Link
+      to="/"
+      className={`inline-flex shrink-0 items-center py-1 ${className}`}
+      aria-label="YOHRIAE home"
+    >
       <img
-        src={logo.url}
+        src={logo}
         alt="YOHRIAE"
-        width={48}
-        height={48}
-        className="h-10 w-10 object-contain"
+        width={220}
+        height={88}
+        className={`max-w-none object-contain object-left ${imageClassName}`}
+        decoding="async"
       />
-      <span className="font-display text-lg tracking-tight text-brand-ink">YOHRIAE</span>
     </Link>
   );
 }

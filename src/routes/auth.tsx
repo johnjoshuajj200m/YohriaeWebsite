@@ -2,30 +2,75 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
-import { lovable } from "@/integrations/lovable/index";
+import { userHasDashboardAccess } from "@/lib/admin/access";
+import { AUTH_INITIATE_PATH, DEFAULT_POST_AUTH_PATH } from "@/lib/auth";
+
+type AuthSearch = {
+  error?: string;
+};
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — YOHRIAE" },
+      { title: "Admin Sign In — YOHRIAE" },
       { name: "robots", content: "noindex" },
     ],
+  }),
+  validateSearch: (search: Record<string, unknown>): AuthSearch => ({
+    error: typeof search.error === "string" ? search.error : undefined,
   }),
   component: Auth,
 });
 
+async function logAdminLookup(user: { id: string; email?: string | null }) {
+  console.log("[admin auth] authenticated user id", user.id);
+  console.log("[admin auth] authenticated email", user.email ?? null);
+
+  const results = [];
+  const lookups: Array<{ column: "user_id" | "id" | "email"; value: string }> = [
+    { column: "user_id", value: user.id },
+    { column: "id", value: user.id },
+    ...(user.email ? [{ column: "email" as const, value: user.email }] : []),
+  ];
+
+  for (const lookup of lookups) {
+    const { data, error } = await supabase
+      .from("admins")
+      .select("*")
+      .eq(lookup.column, lookup.value);
+
+    console.log(`[admin auth] public.admins result (${lookup.column})`, { data, error });
+    if (data) results.push(...data);
+  }
+
+  const role = results.find((admin) => admin.role === "admin" || admin.role === "super_admin")?.role ?? null;
+  console.log("[admin auth] role value", role);
+}
+
 function Auth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const { error: urlError } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/admin" });
+    if (urlError) setError(urlError);
+  }, [urlError]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        await logAdminLookup(data.session.user);
+      }
+
+      if (
+        data.session &&
+        (await userHasDashboardAccess(data.session.user.id, data.session.user.email))
+      ) {
+        navigate({ to: DEFAULT_POST_AUTH_PATH, replace: true });
+      }
     });
   }, [navigate]);
 
@@ -34,22 +79,17 @@ function Auth() {
     setLoading(true);
     setError(null);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin + "/admin",
-            data: { full_name: name },
-          },
-        });
-        if (error) throw error;
-        navigate({ to: "/admin" });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/admin" });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+      if (data.user) {
+        await logAdminLookup(data.user);
       }
+
+      if (!data.user || !(await userHasDashboardAccess(data.user.id, data.user.email))) {
+        await supabase.auth.signOut();
+        throw new Error("Access denied. This account is not authorized for the admin dashboard.");
+      }
+      navigate({ to: DEFAULT_POST_AUTH_PATH, replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -57,12 +97,13 @@ function Auth() {
     }
   }
 
-  async function handleGoogle() {
+  function handleGoogle() {
     setError(null);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/admin",
+    const params = new URLSearchParams({
+      provider: "google",
+      redirect_uri: `${window.location.origin}${DEFAULT_POST_AUTH_PATH}`,
     });
-    if (result.error) setError(result.error.message ?? "Google sign-in failed");
+    window.location.href = `${AUTH_INITIATE_PATH}?${params.toString()}`;
   }
 
   return (
@@ -72,9 +113,9 @@ function Auth() {
       </header>
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-xl">
-          <h1 className="text-2xl font-black">{mode === "signin" ? "Welcome back" : "Create account"}</h1>
+          <h1 className="text-2xl font-black">Admin sign in</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signin" ? "Sign in to access the YOHRIAE admin." : "Sign up to manage YOHRIAE content."}
+            Authorized YOHRIAE staff only. Public account registration is not available.
           </p>
 
           <button
@@ -91,12 +132,6 @@ function Auth() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            {mode === "signup" && (
-              <label className="block">
-                <span className="text-xs font-semibold text-foreground">Full name</span>
-                <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />
-              </label>
-            )}
             <label className="block">
               <span className="text-xs font-semibold text-foreground">Email</span>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />
@@ -105,17 +140,18 @@ function Auth() {
               <span className="text-xs font-semibold text-foreground">Password</span>
               <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </label>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full rounded-full brand-gradient px-4 py-2.5 text-sm font-bold text-white shadow-md disabled:opacity-60">
-              {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
+            {error && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+            <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
+              {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
 
-          <p className="mt-5 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? "Need an account?" : "Already have one?"}{" "}
-            <button type="button" className="font-semibold text-primary hover:underline" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
-              {mode === "signin" ? "Sign up" : "Sign in"}
-            </button>
+          <p className="mt-5 text-center text-xs text-muted-foreground">
+            Need access? Contact an existing YOHRIAE administrator.
           </p>
           <p className="mt-3 text-center text-xs">
             <Link to="/" className="text-muted-foreground hover:text-primary">← Back to site</Link>
