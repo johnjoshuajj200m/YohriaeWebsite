@@ -53,12 +53,17 @@ export function getAnalyticsErrorDisplay(error: unknown) {
   const raw =
     error instanceof Error ? error.message : "Could not load Google Analytics data.";
   const message = sanitizeAnalyticsError(raw);
+  const details =
+    error && typeof error === "object" && "details" in error
+      ? String((error as { details?: unknown }).details ?? "").trim()
+      : "";
 
   if (message === ANALYTICS_API_UNREACHABLE) {
     return {
       title: ANALYTICS_API_UNREACHABLE,
       message:
         "The analytics server endpoint did not return JSON. Redeploy the latest Vercel build so POST /api/analytics is served by the Nitro handler.",
+      details: details || undefined,
     };
   }
 
@@ -66,19 +71,24 @@ export function getAnalyticsErrorDisplay(error: unknown) {
     return {
       title: GA_NOT_CONFIGURED,
       message: `${GA4_SETUP_HINT} Required: ${GA4_SETUP_ENV_VARS.join(", ")}.`,
+      details: details || undefined,
     };
   }
 
   if (message === GA_SERVER_ERROR) {
     return {
       title: GA_SERVER_ERROR,
-      message: "The Google Analytics server returned an error. Check Vercel function logs for details.",
+      message:
+        details ||
+        "The Google Analytics server returned an error. Check Vercel function logs for details.",
+      details: details || undefined,
     };
   }
 
   return {
     title: "Could not load Google Analytics",
     message,
+    details: details || undefined,
   };
 }
 

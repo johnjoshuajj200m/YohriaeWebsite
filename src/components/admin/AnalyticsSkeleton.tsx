@@ -41,16 +41,23 @@ export function AnalyticsPageSkeleton() {
 export function AnalyticsErrorState({
   title,
   message,
+  details,
   onRetry,
 }: {
   title: string;
   message: string;
+  details?: string;
   onRetry?: () => void;
 }) {
   return (
     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
       <h2 className="text-lg font-bold text-foreground">{title}</h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{message}</p>
+      {details && details !== message ? (
+        <pre className="mt-3 max-w-2xl overflow-x-auto rounded-md border border-destructive/20 bg-background/60 p-3 text-xs leading-snug text-foreground whitespace-pre-wrap wrap-break-word">
+          {details}
+        </pre>
+      ) : null}
       {onRetry && (
         <button type="button" onClick={onRetry} className="btn-outline mt-4 px-4 py-2 text-sm">
           Try again

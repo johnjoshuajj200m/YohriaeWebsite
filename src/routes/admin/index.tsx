@@ -70,6 +70,7 @@ function AdminOverview() {
             <AnalyticsErrorState
               title={display.title}
               message={display.message}
+              details={display.details}
               onRetry={() => refetchAnalytics()}
             />
           );

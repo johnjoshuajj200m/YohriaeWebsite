@@ -1,5 +1,5 @@
-const DEFAULT_NOTIFY_EMAILS = ["yohriae2019@gmail.com", "yohriaenigeria@gmail.com"] as const;
-const DEFAULT_FROM = "YOHRIAE <newsletters@yohriae.com>";
+export const DEFAULT_NOTIFY_EMAILS = ["yohriae2019@gmail.com", "yohriaenigeria@gmail.com"] as const;
+export const DEFAULT_FROM = "YOHRIAE <newsletters@yohriae.com>";
 
 function formatSubscriptionTime(createdAt: string) {
   try {
@@ -13,11 +13,11 @@ function formatSubscriptionTime(createdAt: string) {
   }
 }
 
-function getResendApiKey() {
+export function getResendApiKey() {
   return process.env.RESEND_API_KEY?.trim() || undefined;
 }
 
-function getFromAddress() {
+export function getFromAddress() {
   return (
     process.env.NEWSLETTER_FROM_EMAIL?.trim() ??
     process.env.NOTIFICATION_FROM_EMAIL?.trim() ??
@@ -25,7 +25,7 @@ function getFromAddress() {
   );
 }
 
-function getAdminNotifyEmails(): string[] {
+export function getAdminNotifyEmails(): string[] {
   const raw = process.env.ADMIN_NOTIFICATION_EMAILS?.trim();
   if (!raw) return [...DEFAULT_NOTIFY_EMAILS];
   return raw
@@ -34,14 +34,14 @@ function getAdminNotifyEmails(): string[] {
     .filter(Boolean);
 }
 
-async function sendResendEmail(payload: {
+export async function sendResendEmail(payload: {
   from: string;
   to: string | string[];
   subject: string;
   html: string;
   text: string;
   label: string;
-}): Promise<{ ok: boolean; error?: string }> {
+}): Promise<{ ok: boolean; error?: string; messageId?: string }> {
   const apiKey = getResendApiKey();
   if (!apiKey) {
     return { ok: false, error: "RESEND_API_KEY is not configured" };
@@ -65,7 +65,14 @@ async function sendResendEmail(payload: {
 
     if (res.ok) {
       console.info(`[newsletter] Resend ${payload.label} sent`);
-      return { ok: true };
+      let messageId: string | undefined;
+      try {
+        const data = (await res.clone().json()) as { id?: string };
+        messageId = data?.id;
+      } catch {
+        // ignore
+      }
+      return { ok: true, messageId };
     }
 
     const body = await res.text().catch(() => "");

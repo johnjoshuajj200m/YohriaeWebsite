@@ -99,8 +99,8 @@ export async function runAdminAnalyticsRequest(
 
     const credentials = getGa4Credentials();
     if ("error" in credentials) {
-      console.warn("[ga4] Analytics blocked — API credentials not configured.");
-      return { ok: false, error: GA_NOT_CONFIGURED };
+      console.warn("[ga4] Analytics blocked — credentials check failed:", credentials.error, credentials.details ?? "");
+      return { ok: false, error: credentials.error, details: credentials.details };
     }
 
     const auth = await getAuthenticatedUserId(request);

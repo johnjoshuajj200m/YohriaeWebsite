@@ -27,18 +27,91 @@ function normalizePrivateKey(key: string) {
   return unquoted.replace(/\\n/g, "\n");
 }
 
-function ga4Failure(error: unknown): Ga4AnalyticsResult {
+function isValidPropertyId(value: string) {
+  return /^\d+$/.test(value);
+}
+
+function looksLikeMeasurementId(value: string) {
+  return /^G-[A-Z0-9]+$/i.test(value);
+}
+
+function isPemPrivateKey(value: string) {
+  return value.includes("BEGIN PRIVATE KEY") || value.includes("BEGIN RSA PRIVATE KEY");
+}
+
+function looksLikeEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function ga4Failure(error: unknown, hint?: string): Ga4AnalyticsResult {
   console.error("[ga4] unhandled error", error);
+  const baseMessage = String(error instanceof Error ? error.message : error);
   return {
     ok: false,
     error: GA_SERVER_ERROR,
-    details: String(error instanceof Error ? error.message : error),
+    details: hint ? `${baseMessage} — ${hint}` : baseMessage,
+  };
+}
+
+export type Ga4ConfigDiagnostic = {
+  hasPropertyId: boolean;
+  propertyIdIsNumeric: boolean;
+  propertyIdLooksLikeMeasurementId: boolean;
+  hasClientEmail: boolean;
+  clientEmailLooksValid: boolean;
+  hasPrivateKey: boolean;
+  privateKeyIsPem: boolean;
+  configured: boolean;
+  message: string;
+};
+
+export function describeGa4Config(): Ga4ConfigDiagnostic {
+  const propertyId = readEnv("GA4_PROPERTY_ID");
+  const clientEmail = readEnv("GOOGLE_CLIENT_EMAIL");
+  const privateKeyRaw = readEnv("GOOGLE_PRIVATE_KEY");
+  const privateKey = privateKeyRaw ? normalizePrivateKey(privateKeyRaw) : "";
+
+  const hasPropertyId = Boolean(propertyId);
+  const propertyIdIsNumeric = hasPropertyId && isValidPropertyId(propertyId!);
+  const propertyIdLooksLikeMeasurementId = hasPropertyId && looksLikeMeasurementId(propertyId!);
+  const hasClientEmail = Boolean(clientEmail);
+  const clientEmailLooksValid = hasClientEmail && looksLikeEmail(clientEmail!);
+  const hasPrivateKey = Boolean(privateKey);
+  const privateKeyIsPem = hasPrivateKey && isPemPrivateKey(privateKey);
+
+  const issues: string[] = [];
+  if (!hasPropertyId) issues.push("GA4_PROPERTY_ID is missing");
+  else if (propertyIdLooksLikeMeasurementId)
+    issues.push(
+      "GA4_PROPERTY_ID looks like a Measurement ID (G-XXXX). It must be the numeric Property ID from GA4 admin.",
+    );
+  else if (!propertyIdIsNumeric) issues.push("GA4_PROPERTY_ID must contain only digits");
+  if (!hasClientEmail) issues.push("GOOGLE_CLIENT_EMAIL is missing");
+  else if (!clientEmailLooksValid) issues.push("GOOGLE_CLIENT_EMAIL is not a valid email");
+  if (!hasPrivateKey) issues.push("GOOGLE_PRIVATE_KEY is missing");
+  else if (!privateKeyIsPem)
+    issues.push(
+      "GOOGLE_PRIVATE_KEY is not a PEM key (must contain BEGIN PRIVATE KEY). Escaped \\n newlines are supported.",
+    );
+
+  const configured = issues.length === 0;
+
+  return {
+    hasPropertyId,
+    propertyIdIsNumeric,
+    propertyIdLooksLikeMeasurementId,
+    hasClientEmail,
+    clientEmailLooksValid,
+    hasPrivateKey,
+    privateKeyIsPem,
+    configured,
+    message: configured ? "GA4 credentials look valid." : issues.join(" "),
   };
 }
 
 export function getGa4Credentials():
   | { propertyId: string; clientEmail: string; privateKey: string }
-  | { error: string } {
+  | { error: string; details?: string } {
   try {
     const propertyId = readEnv("GA4_PROPERTY_ID");
     const clientEmail = readEnv("GOOGLE_CLIENT_EMAIL");
@@ -50,15 +123,34 @@ export function getGa4Credentials():
         ...(!clientEmail ? ["GOOGLE_CLIENT_EMAIL"] : []),
         ...(!privateKeyRaw ? ["GOOGLE_PRIVATE_KEY"] : []),
       ];
-      if (missing.length > 0) {
-        console.warn("[ga4] Missing server env:", missing.join(", "));
-      }
+      console.warn("[ga4] Missing server env:", missing.join(", "));
       return { error: GA_NOT_CONFIGURED };
     }
 
+    if (looksLikeMeasurementId(propertyId)) {
+      const detail =
+        "GA4_PROPERTY_ID looks like a Measurement ID (G-XXXX). Use the numeric Property ID from GA4 Admin → Property settings.";
+      console.error("[ga4]", detail);
+      return { error: GA_SERVER_ERROR, details: detail };
+    }
+    if (!isValidPropertyId(propertyId)) {
+      const detail = `GA4_PROPERTY_ID must be numeric. Received "${propertyId.slice(0, 20)}".`;
+      console.error("[ga4]", detail);
+      return { error: GA_SERVER_ERROR, details: detail };
+    }
+
+    if (!looksLikeEmail(clientEmail)) {
+      const detail = "GOOGLE_CLIENT_EMAIL must be a valid service account email.";
+      console.error("[ga4]", detail);
+      return { error: GA_SERVER_ERROR, details: detail };
+    }
+
     const privateKey = normalizePrivateKey(privateKeyRaw);
-    if (!privateKey.includes("BEGIN")) {
-      console.warn("[ga4] GOOGLE_PRIVATE_KEY may be malformed after newline normalization.");
+    if (!isPemPrivateKey(privateKey)) {
+      const detail =
+        "GOOGLE_PRIVATE_KEY is not a PEM key. It must contain BEGIN PRIVATE KEY after \\n → \\n normalization.";
+      console.error("[ga4]", detail);
+      return { error: GA_SERVER_ERROR, details: detail };
     }
 
     return {
@@ -68,7 +160,10 @@ export function getGa4Credentials():
     };
   } catch (error) {
     console.error("[ga4] unhandled error", error);
-    return { error: GA_NOT_CONFIGURED };
+    return {
+      error: GA_SERVER_ERROR,
+      details: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -260,35 +355,58 @@ export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4Analytics
 
     const config = getGa4Credentials();
     if ("error" in config) {
-      return { ok: false, error: config.error };
+      return { ok: false, error: config.error, details: config.details };
     }
 
     const { propertyId, clientEmail, privateKey } = config;
     const gaClient = createGa4Client(clientEmail, privateKey);
     if (!gaClient) {
-      return ga4Failure(new Error("Could not initialize Google Analytics client."));
+      return ga4Failure(
+        new Error("Could not initialize Google Analytics client."),
+        "BetaAnalyticsDataClient constructor failed. Check that GOOGLE_PRIVATE_KEY is a valid PEM key.",
+      );
     }
 
     const property = propertyPath(propertyId);
     console.info("[ga4] Fetching analytics for property", propertyId, "range", range);
 
-    const [
-      activeUsers,
-      summary,
-      timeSeries,
-      topPages,
-      trafficSources,
-      devices,
-      countries,
-    ] = await Promise.all([
-      fetchActiveUsers(gaClient, property),
-      fetchSummary(gaClient, property, range),
-      fetchTimeSeries(gaClient, property, range),
-      fetchTopPages(gaClient, property, range),
-      fetchBreakdown(gaClient, property, range, "sessionDefaultChannelGroup"),
-      fetchBreakdown(gaClient, property, range, "deviceCategory"),
-      fetchBreakdown(gaClient, property, range, "country"),
-    ]);
+    let activeUsers: number;
+    let summary: Awaited<ReturnType<typeof fetchSummary>>;
+    let timeSeries: Awaited<ReturnType<typeof fetchTimeSeries>>;
+    let topPages: Ga4PageItem[];
+    let trafficSources: Ga4BreakdownItem[];
+    let devices: Ga4BreakdownItem[];
+    let countries: Ga4BreakdownItem[];
+
+    try {
+      [activeUsers, summary, timeSeries, topPages, trafficSources, devices, countries] =
+        await Promise.all([
+          fetchActiveUsers(gaClient, property),
+          fetchSummary(gaClient, property, range),
+          fetchTimeSeries(gaClient, property, range),
+          fetchTopPages(gaClient, property, range),
+          fetchBreakdown(gaClient, property, range, "sessionDefaultChannelGroup"),
+          fetchBreakdown(gaClient, property, range, "deviceCategory"),
+          fetchBreakdown(gaClient, property, range, "country"),
+        ]);
+    } catch (apiError) {
+      const message = apiError instanceof Error ? apiError.message : String(apiError);
+      const lower = message.toLowerCase();
+      let hint: string | undefined;
+      if (lower.includes("permission_denied") || lower.includes("permission denied")) {
+        hint = `Grant the service account ${clientEmail} Viewer access on GA4 property ${propertyId} (GA4 Admin → Property → Property Access Management).`;
+      } else if (lower.includes("not_found") || lower.includes("does not exist")) {
+        hint = `GA4 property ${propertyId} was not found. Verify the numeric Property ID in GA4 Admin → Property settings.`;
+      } else if (lower.includes("invalid_grant") || lower.includes("invalid jwt signature")) {
+        hint =
+          "The service account credentials are invalid. Re-download the JSON key and update GOOGLE_CLIENT_EMAIL + GOOGLE_PRIVATE_KEY (with \\n preserved).";
+      } else if (lower.includes("unauthenticated") || lower.includes("authentication")) {
+        hint = "Google rejected the service account authentication. Check GOOGLE_PRIVATE_KEY formatting.";
+      } else if (lower.includes("api has not been used") || lower.includes("analyticsdata.googleapis.com")) {
+        hint = "Enable the Google Analytics Data API in the Google Cloud project.";
+      }
+      return ga4Failure(apiError, hint);
+    }
 
     const data: Ga4AnalyticsData = {
       source: "ga4",

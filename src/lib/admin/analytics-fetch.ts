@@ -10,7 +10,7 @@ import {
 
 export type AdminAnalyticsApiResult =
   | { ok: true; analytics: Ga4AnalyticsData }
-  | { ok: false; error: string };
+  | { ok: false; error: string; details?: string };
 
 function logAnalyticsFetchFailed(details: {
   url: string;
@@ -97,13 +97,15 @@ export async function fetchAdminAnalyticsApi(range: Ga4DateRange): Promise<Admin
 
   if (!result.ok) {
     const error = sanitizeAnalyticsError(String(result.error ?? ""));
+    const details =
+      typeof result.details === "string" && result.details.trim() ? result.details.trim() : undefined;
     logAnalyticsFetchFailed({
       url,
       status: response.status,
       contentType,
-      detail: result.details ?? (error === GA_NOT_CONFIGURED ? "credentials missing" : error),
+      detail: details ?? (error === GA_NOT_CONFIGURED ? "credentials missing" : error),
     });
-    return { ok: false, error };
+    return { ok: false, error, details };
   }
 
   if (result.analytics?.source !== "ga4") {
