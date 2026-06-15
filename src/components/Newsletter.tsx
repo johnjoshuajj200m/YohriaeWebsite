@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { subscribeToNewsletter } from "@/lib/newsletter.functions";
 
 export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [doneMessage, setDoneMessage] = useState("Thank you for subscribing.");
   const dark = variant === "dark";
 
   async function handleSubmit(e: React.FormEvent) {
@@ -14,22 +15,37 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
     if (!value) return;
 
     setStatus("sending");
-    const { error } = await supabase.from("newsletter_subscribers").insert({ email: value });
+    setDoneMessage("Thank you for subscribing.");
 
-    if (error) {
-      if (error.code === "23505") {
+    try {
+      const result = await subscribeToNewsletter({ data: { email: value } });
+
+      if (result.status === "duplicate") {
         setStatus("done");
-        toast.success("You are already subscribed.");
-      } else {
+        setDoneMessage("This email is already subscribed.");
+        toast.success("This email is already subscribed.");
+        return;
+      }
+
+      if (result.status === "error") {
         setStatus("error");
         toast.error("Could not subscribe right now. Please try again.");
+        return;
       }
-      return;
-    }
 
-    setStatus("done");
-    setEmail("");
-    toast.success("Thank you for subscribing.");
+      setStatus("done");
+      setEmail("");
+
+      if (result.notification === "send_failed") {
+        setDoneMessage("Subscription saved, but email notification failed.");
+        toast.warning("Subscription saved, but email notification failed.");
+      } else {
+        toast.success("Thank you for subscribing.");
+      }
+    } catch {
+      setStatus("error");
+      toast.error("Could not subscribe right now. Please try again.");
+    }
   }
 
   return (
@@ -53,7 +69,7 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
           </p>
           {status === "done" ? (
             <p className={`mt-3 text-sm font-medium ${dark ? "text-[var(--brand-cyan)]" : "text-primary"}`}>
-              Thank you for subscribing.
+              {doneMessage}
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-2 sm:flex-row">

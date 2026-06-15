@@ -2,26 +2,47 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Copy, Link2, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminPageHeader, EmptyState, StatusBadge } from "@/components/admin/AdminUI";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminSession } from "@/hooks/useAdminSession";
+import { copyToClipboard, inviteAdminUser } from "@/lib/admin/invite";
 import { ASSIGNABLE_ROLES, roleLabel } from "@/lib/admin/permissions";
 import { formatDate } from "@/lib/admin/utils";
+import type { Database } from "@/integrations/supabase/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/admin/users")({
   component: AdminUsers,
 });
 
+type AppRole = Database["public"]["Enums"]["app_role"];
+type InviteRow = Database["public"]["Tables"]["admin_invites"]["Row"];
+
+const LOGIN_URL = "https://yohriae.com/auth";
+
+function inviteStatusLabel(invite: InviteRow) {
+  if (invite.accepted_at) return "accepted";
+  if (invite.status === "email_sent") return "email sent";
+  if (invite.status === "provisioned") return "provisioned";
+  return invite.status || "pending";
+}
+
 function AdminUsers() {
-  const { permissions, userId } = useAdminSession();
+  const { permissions, userId, role: sessionRole } = useAdminSession();
+  const canInvite = sessionRole === "super_admin";
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("editor");
   const [removeRoleId, setRemoveRoleId] = useState<string | null>(null);
+  const [lastInvite, setLastInvite] = useState<{
+    email: string;
+    tempPassword: string | null;
+    loginUrl: string;
+    emailSent: boolean;
+  } | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -51,32 +72,31 @@ function AdminUsers() {
     enabled: permissions.canManageUsers,
   });
 
-  const { data: pendingInvites = [] } = useQuery({
+  const { data: invites = [] } = useQuery({
     queryKey: ["admin-invites"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("admin_invites")
         .select("*")
-        .is("accepted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
-    enabled: permissions.canManageUsers,
+    enabled: canInvite,
   });
 
   const inviteMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("admin_invites").insert({
-        email: email.trim().toLowerCase(),
-        role: role as "admin" | "editor" | "viewer" | "super_admin",
-        invited_by: userId,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
+    mutationFn: async () => inviteAdminUser(email, role as AppRole),
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["admin-invites"] });
-      toast.success("Admin invite created. User will receive access on first sign-in.");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setLastInvite({
+        email: result.email,
+        tempPassword: result.tempPassword,
+        loginUrl: result.loginUrl,
+        emailSent: result.emailSent,
+      });
+      toast.success(result.message);
       setOpen(false);
       setEmail("");
       setRole("editor");
@@ -101,6 +121,15 @@ function AdminUsers() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  async function handleCopy(label: string, value: string) {
+    try {
+      await copyToClipboard(value);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  }
+
   if (!permissions.canManageUsers) {
     return <EmptyState title="Access restricted" description="Only administrators can manage admin users." />;
   }
@@ -109,35 +138,95 @@ function AdminUsers() {
     <>
       <AdminPageHeader
         title="Admin Users"
-        description="Invite approved staff by email. Public sign-up is disabled — access is granted only by invitation."
+        description={
+          canInvite
+            ? "Super admins can provision accounts with a temporary password and optional email delivery."
+            : "View admin accounts. Only super admins can invite new users."
+        }
         action={
-          <button type="button" onClick={() => setOpen(true)} className="btn-primary inline-flex items-center gap-2">
-            <Plus className="h-4 w-4" /> Add admin
-          </button>
+          canInvite ? (
+            <button type="button" onClick={() => setOpen(true)} className="btn-primary inline-flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Invite admin
+            </button>
+          ) : undefined
         }
       />
 
-      {pendingInvites.length > 0 && (
+      {lastInvite && !lastInvite.emailSent && lastInvite.tempPassword && (
         <section className="mb-6 rounded-xl border border-[color-mix(in_srgb,var(--brand-gold)_35%,white)] bg-[color-mix(in_srgb,var(--brand-gold)_8%,white)] p-5">
-          <h2 className="text-sm font-bold">Pending invites</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {pendingInvites.map((invite) => (
-              <li key={invite.id} className="flex justify-between gap-3">
-                <span>{invite.email}</span>
-                <span className="text-muted-foreground">{roleLabel(invite.role)}</span>
-              </li>
-            ))}
-          </ul>
+          <h2 className="text-sm font-bold">Manual delivery required</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Email provider is not configured. Copy these details and send them to{" "}
+            <strong>{lastInvite.email}</strong> securely.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => handleCopy("Login link", lastInvite.loginUrl)}
+              className="btn-outline inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
+            >
+              <Link2 className="h-3.5 w-3.5" /> Copy login link
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCopy("Temporary password", lastInvite.tempPassword!)}
+              className="btn-outline inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
+            >
+              <Copy className="h-3.5 w-3.5" /> Copy temp password
+            </button>
+          </div>
+        </section>
+      )}
+
+      {canInvite && invites.length > 0 && (
+        <section className="mb-6 overflow-hidden rounded-xl border border-border bg-background">
+          <div className="border-b border-border bg-surface px-4 py-3">
+            <h2 className="text-sm font-bold">Invitations</h2>
+          </div>
+          <div className="divide-y divide-border">
+            {invites.map((invite) => {
+              const loginUrl = invite.login_url || LOGIN_URL;
+              const showPassword = !invite.email_sent && !!invite.temp_password;
+              return (
+                <div key={invite.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="break-all text-sm font-semibold">{invite.email}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {roleLabel(invite.role)} · {formatDate(invite.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={inviteStatusLabel(invite)} />
+                    <button
+                      type="button"
+                      onClick={() => handleCopy("Login link", loginUrl)}
+                      className="btn-outline inline-flex items-center gap-1 px-2.5 py-1.5 text-xs"
+                    >
+                      <Link2 className="h-3.5 w-3.5" /> Login link
+                    </button>
+                    {showPassword && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopy("Temporary password", invite.temp_password!)}
+                        className="btn-outline inline-flex items-center gap-1 px-2.5 py-1.5 text-xs"
+                      >
+                        <Copy className="h-3.5 w-3.5" /> Temp password
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
       )}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading users…</p>
       ) : users.length === 0 ? (
-        <EmptyState title="No admin users yet" description="Add the first approved admin by email invitation." />
+        <EmptyState title="No admin users yet" description="Super admins can invite the first approved admin by email." />
       ) : (
         <>
-          {/* Mobile cards */}
           <div className="space-y-3 md:hidden">
             {users.map((u) => (
               <article key={u.roleId} className="card-ngo p-4">
@@ -158,7 +247,7 @@ function AdminUsers() {
                     <dd className="font-medium">{formatDate(u.lastLogin)}</dd>
                   </div>
                 </dl>
-                {u.userId !== userId && (
+                {u.userId !== userId && sessionRole === "super_admin" && (
                   <button
                     type="button"
                     onClick={() => setRemoveRoleId(u.roleId)}
@@ -171,7 +260,6 @@ function AdminUsers() {
             ))}
           </div>
 
-          {/* Desktop table */}
           <div className="hidden overflow-hidden rounded-xl border border-border bg-background md:block">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-border bg-surface text-xs uppercase tracking-wider text-muted-foreground">
@@ -195,7 +283,7 @@ function AdminUsers() {
                       <StatusBadge status={u.isActive ? "active" : "inactive"} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {u.userId !== userId && (
+                      {u.userId !== userId && sessionRole === "super_admin" && (
                         <button type="button" onClick={() => setRemoveRoleId(u.roleId)} className="rounded-md p-2 text-destructive hover:bg-destructive/10">
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -239,10 +327,10 @@ function AdminUsers() {
               </select>
             </label>
             <p className="text-xs text-muted-foreground">
-              The user must sign in with this exact email via Google or password. No public registration is available.
+              A secure temporary password will be generated. If email delivery is configured, login details are emailed automatically; otherwise copy them from this page.
             </p>
             <button type="submit" disabled={inviteMutation.isPending} className="btn-primary w-full">
-              {inviteMutation.isPending ? "Sending invite…" : "Create invite"}
+              {inviteMutation.isPending ? "Creating account…" : "Create admin account"}
             </button>
           </form>
         </DialogContent>

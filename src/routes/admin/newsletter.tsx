@@ -75,6 +75,26 @@ function AdminNewsletter() {
         }
       />
 
+      <div className="mb-6 rounded-lg border border-border bg-surface/60 p-4 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">Email notifications (Vercel server env)</p>
+        <p className="mt-1">
+          New public sign-ups trigger admin notification emails when these variables are set:
+        </p>
+        <ul className="mt-2 list-inside list-disc space-y-1">
+          <li>
+            <code className="text-xs">RESEND_API_KEY</code> — Resend API key (server only)
+          </li>
+          <li>
+            <code className="text-xs">NEWSLETTER_FROM_EMAIL</code> — verified sender, e.g.{" "}
+            <code className="text-xs">YOHRIAE &lt;noreply@yohriae.com&gt;</code>
+          </li>
+        </ul>
+        <p className="mt-2">
+          Notifications go to yohriae2019@gmail.com and yohriaenigeria@gmail.com. Subscriptions still save
+          without email configured.
+        </p>
+      </div>
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading subscribers…</p>
       ) : subscribers.length === 0 ? (

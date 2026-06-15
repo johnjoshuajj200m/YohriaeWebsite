@@ -74,6 +74,10 @@ export function StatusBadge({ status }: { status: string }) {
     past: "bg-surface text-muted-foreground border-border",
     active: "bg-emerald-50 text-emerald-700 border-emerald-200",
     inactive: "bg-surface text-muted-foreground border-border",
+    provisioned: "bg-amber-50 text-amber-800 border-amber-200",
+    "email sent": "bg-emerald-50 text-emerald-700 border-emerald-200",
+    accepted: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    pending: "bg-surface text-muted-foreground border-border",
   };
 
   return (

@@ -3,16 +3,26 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminPageHeader, AdminStatCard, EmptyState } from "@/components/admin/AdminUI";
-import { getMockAnalytics } from "@/lib/admin/analytics-mock";
+import {
+  AnalyticsErrorState,
+  AnalyticsStatSkeleton,
+} from "@/components/admin/AnalyticsSkeleton";
+import { useAdminAnalytics } from "@/hooks/useAdminAnalytics";
 import { useAdminSession } from "@/hooks/useAdminSession";
+import { GA_NOT_CONNECTED } from "@/lib/admin/analytics-errors";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminOverview,
 });
 
 function AdminOverview() {
-  const analytics = getMockAnalytics();
   const { permissions } = useAdminSession();
+  const {
+    data: analytics,
+    isLoading: analyticsLoading,
+    error: analyticsError,
+    refetch: refetchAnalytics,
+  } = useAdminAnalytics("30d", permissions.canViewAnalytics);
 
   const { data: stats } = useQuery({
     queryKey: ["admin-overview-stats"],
@@ -47,16 +57,45 @@ function AdminOverview() {
         description="Monitor website activity, content performance, and community engagement."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminStatCard label="Total visits" value={analytics.totalVisits.toLocaleString()} hint="Mock GA4 data" accent="cyan" />
-        <AdminStatCard label="Today's visits" value={analytics.todayVisits.toLocaleString()} accent="magenta" />
-        <AdminStatCard label="Page views" value={analytics.pageViews.toLocaleString()} accent="gold" />
-        <AdminStatCard label="Blog posts published" value={stats?.publishedPosts ?? 0} accent="primary" />
-        <AdminStatCard label="Events published" value={stats?.publishedEvents ?? 0} accent="cyan" />
-        <AdminStatCard label="Contact submissions" value={stats?.messages ?? 0} accent="magenta" />
-        <AdminStatCard label="New messages" value={stats?.newMessages ?? 0} accent="gold" />
-        <AdminStatCard label="Newsletter subscribers" value={stats?.subscribers ?? 0} accent="primary" />
-      </div>
+      {permissions.canViewAnalytics && analyticsLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <AnalyticsStatSkeleton key={i} />
+          ))}
+        </div>
+      ) : permissions.canViewAnalytics && analyticsError ? (
+        <AnalyticsErrorState
+          title={
+            analyticsError instanceof Error && analyticsError.message === GA_NOT_CONNECTED
+              ? GA_NOT_CONNECTED
+              : "Could not load Google Analytics"
+          }
+          message={
+            analyticsError instanceof Error && analyticsError.message === GA_NOT_CONNECTED
+              ? "Add GA4_PROPERTY_ID and GA4_SERVICE_ACCOUNT_JSON to your server environment, then redeploy."
+              : analyticsError instanceof Error
+                ? analyticsError.message
+                : "Could not load analytics."
+          }
+          onRetry={() => refetchAnalytics()}
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {permissions.canViewAnalytics && analytics ? (
+            <>
+              <AdminStatCard label="Total users (30d)" value={analytics.totalUsers.toLocaleString()} accent="primary" />
+              <AdminStatCard label="Active users" value={analytics.activeUsers.toLocaleString()} accent="magenta" />
+              <AdminStatCard label="Users today" value={analytics.usersToday.toLocaleString()} accent="cyan" />
+              <AdminStatCard label="Page views (30d)" value={analytics.pageViews.toLocaleString()} accent="gold" />
+            </>
+          ) : null}
+          <AdminStatCard label="Blog posts published" value={stats?.publishedPosts ?? 0} accent="primary" />
+          <AdminStatCard label="Events published" value={stats?.publishedEvents ?? 0} accent="cyan" />
+          <AdminStatCard label="Contact submissions" value={stats?.messages ?? 0} accent="magenta" />
+          <AdminStatCard label="New messages" value={stats?.newMessages ?? 0} accent="gold" />
+          <AdminStatCard label="Newsletter subscribers" value={stats?.subscribers ?? 0} accent="primary" />
+        </div>
+      )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="brand-card rounded-xl border border-border bg-background p-6">
@@ -69,12 +108,22 @@ function AdminOverview() {
             )}
           </div>
           <div className="mt-4 space-y-3">
-            {analytics.topPages.slice(0, 5).map((page) => (
-              <div key={page.path} className="flex items-center justify-between gap-3 text-sm">
-                <span className="font-medium text-foreground">{page.path}</span>
-                <span className="text-muted-foreground">{page.views.toLocaleString()} views</span>
-              </div>
-            ))}
+            {permissions.canViewAnalytics && analyticsLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-4 animate-pulse rounded bg-surface" />
+              ))
+            ) : permissions.canViewAnalytics && analytics?.topPages.length ? (
+              analytics.topPages.slice(0, 5).map((page) => (
+                <div key={page.path} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-foreground">{page.path}</span>
+                  <span className="text-muted-foreground">{page.views.toLocaleString()} views</span>
+                </div>
+              ))
+            ) : permissions.canViewAnalytics && analyticsError ? (
+              <p className="text-sm text-muted-foreground">{GA_NOT_CONNECTED}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">No page analytics available yet.</p>
+            )}
           </div>
         </section>
 
