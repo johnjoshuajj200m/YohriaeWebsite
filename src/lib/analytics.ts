@@ -15,8 +15,8 @@ export function ensureAnalyticsStub() {
   if (window.gtag) return;
 
   window.dataLayer = window.dataLayer ?? [];
-  window.gtag = function gtag() {
-    window.dataLayer?.push(arguments);
+  window.gtag = function gtag(...args: unknown[]) {
+    window.dataLayer?.push(args);
   };
 }
 
@@ -45,8 +45,7 @@ export function trackPageView(path: string, title?: string) {
   ensureAnalyticsStub();
   if (!window.gtag) return;
 
-  const resolvedTitle =
-    title ?? (typeof document !== "undefined" ? document.title : undefined);
+  const resolvedTitle = title ?? (typeof document !== "undefined" ? document.title : undefined);
 
   window.gtag("event", "page_view", {
     page_path: path,

@@ -10,5 +10,5 @@ export const Route = createFileRoute("/gallery")({
         "Browse photographs from YOHRIAE programs, advocacy events, trainings, and community engagement across Northern Nigeria.",
       path: "/gallery",
       jsonLd: buildGalleryPageSchema(),
-    })
+    }),
 });

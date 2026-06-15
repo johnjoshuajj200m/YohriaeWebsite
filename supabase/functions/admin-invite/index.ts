@@ -48,8 +48,7 @@ async function sendInviteEmail(opts: {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) return false;
 
-  const from =
-    Deno.env.get("INVITE_FROM_EMAIL") ?? "YOHRIAE Admin <noreply@yohriae.com>";
+  const from = Deno.env.get("INVITE_FROM_EMAIL") ?? "YOHRIAE Admin <noreply@yohriae.com>";
 
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.6;color:#0a2540;max-width:560px">
@@ -162,19 +161,15 @@ Deno.serve(async (req) => {
 
   const tempPassword = generateTempPassword();
 
-  const { data: created, error: createError } =
-    await adminClient.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: { invited_by: caller.id, must_change_password: true },
-    });
+  const { data: created, error: createError } = await adminClient.auth.admin.createUser({
+    email,
+    password: tempPassword,
+    email_confirm: true,
+    user_metadata: { invited_by: caller.id, must_change_password: true },
+  });
 
   if (createError || !created.user) {
-    return jsonResponse(
-      { error: createError?.message ?? "Could not create auth user" },
-      500,
-    );
+    return jsonResponse({ error: createError?.message ?? "Could not create auth user" }, 500);
   }
 
   const newUserId = created.user.id;
@@ -193,10 +188,9 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: adminsError.message }, 500);
   }
 
-  await adminClient.from("user_roles").upsert(
-    { user_id: newUserId, role },
-    { onConflict: "user_id,role" },
-  );
+  await adminClient
+    .from("user_roles")
+    .upsert({ user_id: newUserId, role }, { onConflict: "user_id,role" });
 
   await adminClient.from("profiles").upsert(
     {

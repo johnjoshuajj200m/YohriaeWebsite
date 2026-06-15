@@ -1,9 +1,5 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (build-only using cloudflare as a default target),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+// vite-tanstack-config bundles TanStack Start, React, Tailwind, Nitro, and path aliases.
+// Do NOT add those plugins manually or the app will break with duplicate plugins.
 import { imagetools } from "vite-imagetools";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
@@ -18,13 +14,19 @@ export default defineConfig({
             if (id.includes("node_modules/react-dom") || /node_modules\/react\//.test(id)) {
               return "vendor-react";
             }
-            if (id.includes("node_modules/@tanstack/react-router") || id.includes("node_modules/@tanstack/router-core")) {
+            if (
+              id.includes("node_modules/@tanstack/react-router") ||
+              id.includes("node_modules/@tanstack/router-core")
+            ) {
               return "vendor-router";
             }
             if (id.includes("node_modules/lucide-react")) {
               return "vendor-ui";
             }
-            if (id.includes("node_modules/@tanstack/react-query") || id.includes("node_modules/@tanstack/query-core")) {
+            if (
+              id.includes("node_modules/@tanstack/react-query") ||
+              id.includes("node_modules/@tanstack/query-core")
+            ) {
               return "vendor-query";
             }
             if (id.includes("node_modules/@supabase")) {

@@ -2,33 +2,50 @@
 // Server-side Supabase client with service role key - bypasses RLS.
 // Use this for admin operations in server functions and server routes only.
 // For user-authenticated queries (with RLS), use the auth middleware instead.
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./types";
+import {
+  logSupabaseServiceEnvOnce,
+  readSupabaseServiceRoleKey,
+  readSupabaseUrl,
+  validateSupabaseServiceEnv,
+} from "@/lib/env.server";
 
 function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const validation = validateSupabaseServiceEnv();
+  const url = readSupabaseUrl();
+  const serviceRoleKey = readSupabaseServiceRoleKey();
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY'] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Check your deployment environment configuration.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+  if (!validation.ok || !url || !serviceRoleKey) {
+    logSupabaseServiceEnvOnce(validation);
+    return createClient<Database>(
+      url || "https://invalid.supabase.co",
+      serviceRoleKey || "invalid-service-role-key",
+      {
+        auth: {
+          storage: undefined,
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      },
+    );
   }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient<Database>(url, serviceRoleKey, {
     auth: {
       storage: undefined,
       persistSession: false,
       autoRefreshToken: false,
-    }
+    },
   });
 }
 
 let _supabaseAdmin: ReturnType<typeof createSupabaseAdminClient> | undefined;
+
+export function getSupabaseAdminEnvMessage(): string | undefined {
+  const validation = validateSupabaseServiceEnv();
+  return validation.ok ? undefined : validation.message;
+}
 
 // Server-side Supabase client with service role - bypasses RLS
 // SECURITY: Only use this for trusted server-side operations, never expose to client code

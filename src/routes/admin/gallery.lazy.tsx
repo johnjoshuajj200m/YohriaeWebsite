@@ -38,7 +38,11 @@ function AdminGallery() {
   const [form, setForm] = useState<GalleryForm>(emptyForm());
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: images = [], isLoading, error } = useQuery({
+  const {
+    data: images = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["admin-gallery"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -173,9 +177,7 @@ function AdminGallery() {
                 <p className="mt-1 line-clamp-2 text-sm text-foreground">
                   {image.caption || "Untitled photo"}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Order: {image.sort_order ?? 0}
-                </p>
+                <p className="mt-1 text-xs text-muted-foreground">Order: {image.sort_order ?? 0}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -251,14 +253,10 @@ function AdminGallery() {
                 <input
                   type="number"
                   value={form.sort_order}
-                  onChange={(e) =>
-                    setForm({ ...form, sort_order: Number(e.target.value) || 0 })
-                  }
+                  onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })}
                   className="form-field mt-1.5"
                 />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Lower numbers appear first.
-                </p>
+                <p className="mt-1 text-xs text-muted-foreground">Lower numbers appear first.</p>
               </label>
             </div>
 
@@ -292,4 +290,3 @@ function AdminGallery() {
     </>
   );
 }
-

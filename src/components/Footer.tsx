@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   AtSign,
@@ -12,9 +13,12 @@ import {
   Twitter,
 } from "lucide-react";
 import { Logo } from "./Logo";
-import { Newsletter } from "./Newsletter";
 import { FOOTER_LINKS, SITE } from "@/lib/site-config";
 import { toTelHref, toWhatsAppHref, useSiteSettings } from "@/lib/site-settings";
+
+const Newsletter = lazy(() =>
+  import("./Newsletter").then((m) => ({ default: m.Newsletter })),
+);
 
 export function Footer() {
   const settings = useSiteSettings();
@@ -116,11 +120,15 @@ export function Footer() {
             </div>
           </div>
 
-          <Newsletter variant="dark" />
+          <Suspense fallback={null}>
+            <Newsletter variant="dark" />
+          </Suspense>
         </div>
 
         <div className="mt-8 flex flex-col items-start justify-between gap-2 border-t border-white/10 pt-6 text-xs text-white/55 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} {SITE.name}. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+          </p>
           <p>{SITE.longName}</p>
         </div>
       </div>

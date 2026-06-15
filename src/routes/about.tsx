@@ -10,5 +10,5 @@ export const Route = createFileRoute("/about")({
         "YOHRIAE is a youth-led nonprofit working across Northern Nigeria on health, human rights, advocacy, and community empowerment. Learn our story, mission, and values.",
       path: "/about",
       jsonLd: buildAboutPageSchema(),
-    })
+    }),
 });

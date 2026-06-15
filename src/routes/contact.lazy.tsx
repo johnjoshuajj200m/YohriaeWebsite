@@ -1,5 +1,17 @@
 import { PageHero } from "@/components/PageHero";
-import { Facebook, Instagram, Linkedin, Mail, MapPin, MessageCircle, Music2, Phone, Send, CheckCircle2, Twitter } from "lucide-react";
+import {
+  Facebook,
+  Instagram,
+  Linkedin,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Music2,
+  Phone,
+  Send,
+  CheckCircle2,
+  Twitter,
+} from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -47,25 +59,35 @@ function Contact() {
       return;
     }
     setState("sending");
-    const { error } = await supabase.from("contact_messages").insert({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      subject: parsed.data.subject ?? null,
-      message: parsed.data.message,
-    });
-    if (error) {
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        name: parsed.data.name,
+        email: parsed.data.email,
+        subject: parsed.data.subject ?? null,
+        message: parsed.data.message,
+      });
+      if (error) {
+        setState("error");
+        const msg =
+          error.message ||
+          "Could not send your message. Please email yohriae2019@gmail.com directly.";
+        setErrorMsg(msg);
+        toast.error(msg);
+        return;
+      }
+      analyticsEvents.contactSubmission();
+      toast.success("Message sent. We'll get back to you soon.");
+      setState("sent");
+      (e.target as HTMLFormElement).reset();
+    } catch (err) {
       setState("error");
       const msg =
-        error.message ||
-        "Could not send your message. Please email yohriae2019@gmail.com directly.";
+        err instanceof Error
+          ? err.message
+          : "Could not send your message. Please email yohriae2019@gmail.com directly.";
       setErrorMsg(msg);
       toast.error(msg);
-      return;
     }
-    analyticsEvents.contactSubmission();
-    toast.success("Message sent. We'll get back to you soon.");
-    setState("sent");
-    (e.target as HTMLFormElement).reset();
   }
 
   return (
@@ -161,15 +183,32 @@ function Contact() {
           <aside className="space-y-4">
             {[
               { Icon: MapPin, label: "Office", value: settings.location },
-              { Icon: Mail, label: "Primary Email", value: settings.email, href: `mailto:${settings.email}` },
-              { Icon: Mail, label: "Secondary Email", value: settings.secondaryEmail, href: `mailto:${settings.secondaryEmail}` },
-              { Icon: Phone, label: "Office Phone", value: settings.phone, href: toTelHref(settings.phone) },
-              { Icon: MessageCircle, label: "WhatsApp", value: settings.whatsapp, href: toWhatsAppHref(settings.whatsapp) },
+              {
+                Icon: Mail,
+                label: "Primary Email",
+                value: settings.email,
+                href: `mailto:${settings.email}`,
+              },
+              {
+                Icon: Mail,
+                label: "Secondary Email",
+                value: settings.secondaryEmail,
+                href: `mailto:${settings.secondaryEmail}`,
+              },
+              {
+                Icon: Phone,
+                label: "Office Phone",
+                value: settings.phone,
+                href: toTelHref(settings.phone),
+              },
+              {
+                Icon: MessageCircle,
+                label: "WhatsApp",
+                value: settings.whatsapp,
+                href: toWhatsAppHref(settings.whatsapp),
+              },
             ].map(({ Icon, label, value, href }) => (
-              <div
-                key={label}
-                className="card-ngo flex items-start gap-4 p-4 sm:p-5"
-              >
+              <div key={label} className="card-ngo flex items-start gap-4 p-4 sm:p-5">
                 <div className="icon-box icon-box-cyan h-10 w-10 shrink-0">
                   <Icon className="h-5 w-5" />
                 </div>
@@ -220,7 +259,9 @@ function Contact() {
                   href={toWhatsAppHref(settings.whatsapp)}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => analyticsEvents.contactChannel("whatsapp", "contact_quick_actions")}
+                  onClick={() =>
+                    analyticsEvents.contactChannel("whatsapp", "contact_quick_actions")
+                  }
                   className="btn-outline w-full justify-center"
                 >
                   <MessageCircle className="h-4 w-4" /> WhatsApp Chat
@@ -287,4 +328,3 @@ function Field({
     </div>
   );
 }
-

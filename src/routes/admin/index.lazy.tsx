@@ -3,10 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminPageHeader, AdminStatCard, EmptyState } from "@/components/admin/AdminUI";
-import {
-  AnalyticsErrorState,
-  AnalyticsStatSkeleton,
-} from "@/components/admin/AnalyticsSkeleton";
+import { AnalyticsErrorState, AnalyticsStatSkeleton } from "@/components/admin/AnalyticsSkeleton";
 import { useAdminAnalytics } from "@/hooks/useAdminAnalytics";
 import { useAdminSession } from "@/hooks/useAdminSession";
 import { getAnalyticsErrorDisplay } from "@/lib/admin/analytics-errors";
@@ -31,11 +28,17 @@ function AdminOverview() {
       const [posts, publishedPosts, events, publishedEvents, messages, newMessages, subscribers] =
         await Promise.all([
           supabase.from("blog_posts").select("*", { count: "exact", head: true }),
-          supabase.from("blog_posts").select("*", { count: "exact", head: true }).eq("published", true),
+          supabase
+            .from("blog_posts")
+            .select("*", { count: "exact", head: true })
+            .eq("published", true),
           supabase.from("events").select("*", { count: "exact", head: true }),
           supabase.from("events").select("*", { count: "exact", head: true }).eq("published", true),
           supabase.from("contact_messages").select("*", { count: "exact", head: true }),
-          supabase.from("contact_messages").select("*", { count: "exact", head: true }).eq("status", "new"),
+          supabase
+            .from("contact_messages")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "new"),
           supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
         ]);
 
@@ -80,17 +83,49 @@ function AdminOverview() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {permissions.canViewAnalytics && analytics?.source === "ga4" ? (
             <>
-              <AdminStatCard label="Total users (30d)" value={analytics.totalUsers.toLocaleString()} accent="primary" />
-              <AdminStatCard label="Active users" value={analytics.activeUsers.toLocaleString()} accent="magenta" />
-              <AdminStatCard label="New users (30d)" value={analytics.newUsers.toLocaleString()} accent="cyan" />
-              <AdminStatCard label="Page views (30d)" value={analytics.pageViews.toLocaleString()} accent="gold" />
+              <AdminStatCard
+                label="Total users (30d)"
+                value={analytics.totalUsers.toLocaleString()}
+                accent="primary"
+              />
+              <AdminStatCard
+                label="Active users"
+                value={analytics.activeUsers.toLocaleString()}
+                accent="magenta"
+              />
+              <AdminStatCard
+                label="New users (30d)"
+                value={analytics.newUsers.toLocaleString()}
+                accent="cyan"
+              />
+              <AdminStatCard
+                label="Page views (30d)"
+                value={analytics.pageViews.toLocaleString()}
+                accent="gold"
+              />
             </>
           ) : null}
-          <AdminStatCard label="Blog posts published" value={stats?.publishedPosts ?? 0} accent="primary" />
-          <AdminStatCard label="Events published" value={stats?.publishedEvents ?? 0} accent="cyan" />
-          <AdminStatCard label="Contact submissions" value={stats?.messages ?? 0} accent="magenta" />
+          <AdminStatCard
+            label="Blog posts published"
+            value={stats?.publishedPosts ?? 0}
+            accent="primary"
+          />
+          <AdminStatCard
+            label="Events published"
+            value={stats?.publishedEvents ?? 0}
+            accent="cyan"
+          />
+          <AdminStatCard
+            label="Contact submissions"
+            value={stats?.messages ?? 0}
+            accent="magenta"
+          />
           <AdminStatCard label="New messages" value={stats?.newMessages ?? 0} accent="gold" />
-          <AdminStatCard label="Newsletter subscribers" value={stats?.subscribers ?? 0} accent="primary" />
+          <AdminStatCard
+            label="Newsletter subscribers"
+            value={stats?.subscribers ?? 0}
+            accent="primary"
+          />
         </div>
       )}
 
@@ -99,7 +134,10 @@ function AdminOverview() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold">Top visited pages</h2>
             {permissions.canViewAnalytics && (
-              <Link to="/admin/analytics" className="text-sm font-semibold text-primary hover:underline">
+              <Link
+                to="/admin/analytics"
+                className="text-sm font-semibold text-primary hover:underline"
+              >
                 View analytics
               </Link>
             )}
@@ -130,17 +168,26 @@ function AdminOverview() {
           <h2 className="text-lg font-bold">Quick actions</h2>
           <div className="mt-4 grid gap-2">
             {permissions.canManageBlog && (
-              <Link to="/admin/blog" className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm font-semibold hover:bg-surface">
+              <Link
+                to="/admin/blog"
+                className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm font-semibold hover:bg-surface"
+              >
                 Manage blog posts <ArrowRight className="h-4 w-4" />
               </Link>
             )}
             {permissions.canManageEvents && (
-              <Link to="/admin/events" className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm font-semibold hover:bg-surface">
+              <Link
+                to="/admin/events"
+                className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm font-semibold hover:bg-surface"
+              >
                 Manage events <ArrowRight className="h-4 w-4" />
               </Link>
             )}
             {permissions.canManageMessages && (
-              <Link to="/admin/messages" className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm font-semibold hover:bg-surface">
+              <Link
+                to="/admin/messages"
+                className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-sm font-semibold hover:bg-surface"
+              >
                 Review contact messages <ArrowRight className="h-4 w-4" />
               </Link>
             )}
@@ -150,10 +197,12 @@ function AdminOverview() {
 
       {!stats && (
         <div className="mt-8">
-          <EmptyState title="Loading dashboard data" description="Fetching latest content and engagement metrics." />
+          <EmptyState
+            title="Loading dashboard data"
+            description="Fetching latest content and engagement metrics."
+          />
         </div>
       )}
     </>
   );
 }
-

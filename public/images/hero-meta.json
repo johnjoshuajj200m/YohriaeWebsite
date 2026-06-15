@@ -1,8 +1,28 @@
 {
+  "hero-480.webp": {
+    "width": 480,
+    "height": 300,
+    "bytes": 24772
+  },
+  "hero-480.avif": {
+    "width": 480,
+    "height": 300,
+    "bytes": 20292
+  },
   "hero-640.webp": {
     "width": 640,
     "height": 400,
     "bytes": 43238
+  },
+  "hero-768.webp": {
+    "width": 768,
+    "height": 480,
+    "bytes": 59506
+  },
+  "hero-768.avif": {
+    "width": 768,
+    "height": 480,
+    "bytes": 47291
   },
   "hero-960.webp": {
     "width": 960,
@@ -13,11 +33,6 @@
     "width": 1280,
     "height": 800,
     "bytes": 159468
-  },
-  "hero-1920.webp": {
-    "width": 1920,
-    "height": 1200,
-    "bytes": 329390
   },
   "hero-1280.jpg": {
     "width": 1280,

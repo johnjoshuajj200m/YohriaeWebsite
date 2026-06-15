@@ -3,7 +3,7 @@ import { Facebook, Instagram, Linkedin, Menu, Music2, Twitter, X } from "lucide-
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { NAV_LINKS } from "@/lib/site-config";
-import { analyticsEvents } from "@/lib/analytics";
+import { trackDonateClick, trackPartnerClick } from "@/lib/analytics-clicks";
 import { useSiteSettings } from "@/lib/site-settings";
 
 export function Header() {
@@ -73,14 +73,14 @@ export function Header() {
         <div className="flex items-center gap-2">
           <Link
             to="/partner"
-            onClick={() => analyticsEvents.partnerClick("header")}
+            onClick={() => trackPartnerClick("header")}
             className="btn-outline hidden px-4 py-2 text-sm lg:inline-flex"
           >
             Partner With Us
           </Link>
           <Link
             to="/donate"
-            onClick={() => analyticsEvents.donateClick("header")}
+            onClick={() => trackDonateClick("header")}
             className="btn-primary hidden px-4 py-2 text-sm lg:inline-flex"
           >
             Donate
@@ -146,9 +146,7 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     style={open ? { animationDelay: `${40 + idx * 30}ms` } : undefined}
                     className={`group flex items-center justify-between border-b border-border/70 py-4 text-[1.0625rem] font-medium tracking-tight transition-colors ${
-                      active
-                        ? "text-primary"
-                        : "text-foreground hover:text-primary"
+                      active ? "text-primary" : "text-foreground hover:text-primary"
                     }`}
                   >
                     <span className="flex items-center gap-3">
@@ -161,9 +159,7 @@ export function Header() {
                       />
                       {l.label}
                     </span>
-                    {active && (
-                      <span className="h-2 w-2 rounded-full bg-[var(--brand-magenta)]" />
-                    )}
+                    {active && <span className="h-2 w-2 rounded-full bg-[var(--brand-magenta)]" />}
                   </Link>
                 );
               })}
@@ -173,7 +169,7 @@ export function Header() {
               <Link
                 to="/donate"
                 onClick={() => {
-                  analyticsEvents.donateClick("mobile_header");
+                  trackDonateClick("mobile_header");
                   setOpen(false);
                 }}
                 className="btn-primary w-full py-3.5 text-[0.9375rem]"
@@ -183,7 +179,7 @@ export function Header() {
               <Link
                 to="/partner"
                 onClick={() => {
-                  analyticsEvents.partnerClick("mobile_header");
+                  trackPartnerClick("mobile_header");
                   setOpen(false);
                 }}
                 className="btn-outline w-full py-3.5 text-[0.9375rem]"

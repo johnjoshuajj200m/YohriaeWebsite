@@ -28,10 +28,7 @@ function NotFoundComponent() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="btn-primary"
-          >
+          <Link to="/" className="btn-primary">
             Back to YOHRIAE
           </Link>
         </div>
@@ -42,12 +39,7 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  let router: ReturnType<typeof useRouter> | null = null;
-  try {
-    router = useRouter();
-  } catch {
-    router = null;
-  }
+  const router = useRouter();
 
   useEffect(() => {
     try {
@@ -92,8 +84,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-const ROOT_TITLE =
-  "YOHRIAE — Youth Health and Rights Initiative for Advocacy and Empowerment";
+const ROOT_TITLE = "YOHRIAE — Youth Health and Rights Initiative for Advocacy and Empowerment";
 const ROOT_DESCRIPTION =
   "YOHRIAE is a youth-led nonprofit advancing health, human rights, advocacy, and community empowerment for young people across Northern Nigeria.";
 
@@ -121,7 +112,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: ROOT_DESCRIPTION },
       { property: "og:url", content: SITE_URL },
       { property: "og:image", content: DEFAULT_OG_IMAGE },
-      { property: "og:image:alt", content: "YOHRIAE — empowering young people in Northern Nigeria" },
+      {
+        property: "og:image:alt",
+        content: "YOHRIAE — empowering young people in Northern Nigeria",
+      },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: TWITTER_HANDLE },
       { name: "twitter:creator", content: TWITTER_HANDLE },

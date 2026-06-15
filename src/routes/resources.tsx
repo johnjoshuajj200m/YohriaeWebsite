@@ -10,5 +10,5 @@ export const Route = createFileRoute("/resources")({
         "Public resources from YOHRIAE: blog updates, events, reports, and photo stories from our work on youth health, rights, and community empowerment.",
       path: "/resources",
       jsonLd: buildResourcesPageSchema(),
-    })
+    }),
 });

@@ -131,7 +131,12 @@ function AdminUsers() {
   }
 
   if (!permissions.canManageUsers) {
-    return <EmptyState title="Access restricted" description="Only administrators can manage admin users." />;
+    return (
+      <EmptyState
+        title="Access restricted"
+        description="Only administrators can manage admin users."
+      />
+    );
   }
 
   return (
@@ -145,7 +150,11 @@ function AdminUsers() {
         }
         action={
           canInvite ? (
-            <button type="button" onClick={() => setOpen(true)} className="btn-primary inline-flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="btn-primary inline-flex items-center gap-2"
+            >
               <Plus className="h-4 w-4" /> Invite admin
             </button>
           ) : undefined
@@ -188,7 +197,10 @@ function AdminUsers() {
               const loginUrl = invite.login_url || LOGIN_URL;
               const showPassword = !invite.email_sent && !!invite.temp_password;
               return (
-                <div key={invite.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  key={invite.id}
+                  className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div className="min-w-0">
                     <p className="break-all text-sm font-semibold">{invite.email}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -224,7 +236,10 @@ function AdminUsers() {
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading users…</p>
       ) : users.length === 0 ? (
-        <EmptyState title="No admin users yet" description="Super admins can invite the first approved admin by email." />
+        <EmptyState
+          title="No admin users yet"
+          description="Super admins can invite the first approved admin by email."
+        />
       ) : (
         <>
           <div className="space-y-3 md:hidden">
@@ -284,7 +299,11 @@ function AdminUsers() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {u.userId !== userId && sessionRole === "super_admin" && (
-                        <button type="button" onClick={() => setRemoveRoleId(u.roleId)} className="rounded-md p-2 text-destructive hover:bg-destructive/10">
+                        <button
+                          type="button"
+                          onClick={() => setRemoveRoleId(u.roleId)}
+                          className="rounded-md p-2 text-destructive hover:bg-destructive/10"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       )}
@@ -299,7 +318,9 @@ function AdminUsers() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Invite admin user</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Invite admin user</DialogTitle>
+          </DialogHeader>
           <form
             className="space-y-4"
             onSubmit={(e) => {
@@ -320,16 +341,27 @@ function AdminUsers() {
             </label>
             <label className="block text-sm">
               <span className="font-semibold">Role</span>
-              <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2">
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2"
+              >
                 {ASSIGNABLE_ROLES.map((r) => (
-                  <option key={r} value={r}>{roleLabel(r)}</option>
+                  <option key={r} value={r}>
+                    {roleLabel(r)}
+                  </option>
                 ))}
               </select>
             </label>
             <p className="text-xs text-muted-foreground">
-              A secure temporary password will be generated. If email delivery is configured, login details are emailed automatically; otherwise copy them from this page.
+              A secure temporary password will be generated. If email delivery is configured, login
+              details are emailed automatically; otherwise copy them from this page.
             </p>
-            <button type="submit" disabled={inviteMutation.isPending} className="btn-primary w-full">
+            <button
+              type="submit"
+              disabled={inviteMutation.isPending}
+              className="btn-primary w-full"
+            >
               {inviteMutation.isPending ? "Creating account…" : "Create admin account"}
             </button>
           </form>
@@ -347,4 +379,3 @@ function AdminUsers() {
     </>
   );
 }
-

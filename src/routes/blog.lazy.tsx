@@ -5,6 +5,12 @@ import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, BookOpen } from "lucide-react";
+import {
+  PublicQueryEmpty,
+  PublicQueryError,
+  PublicQueryLoading,
+  publicQueryErrorMessage,
+} from "@/components/PublicQueryState";
 import { buildPageHead } from "@/lib/seo";
 import { buildBlogPageSchema } from "@/lib/schema";
 import { fetchPublishedBlogPostsForSchema } from "@/lib/schema-data";
@@ -42,11 +48,7 @@ function BlogCover({
       className={`flex items-center justify-center bg-gradient-to-br from-[color-mix(in_srgb,var(--brand-cyan)_12%,white)] to-[color-mix(in_srgb,var(--brand-magenta)_8%,white)] ${className ?? ""}`}
     >
       <BookOpen
-        className={
-          size === "large"
-            ? "h-12 w-12 text-primary/40"
-            : "h-8 w-8 text-primary/40"
-        }
+        className={size === "large" ? "h-12 w-12 text-primary/40" : "h-8 w-8 text-primary/40"}
       />
     </div>
   );
@@ -58,7 +60,13 @@ export const Route = createLazyFileRoute("/blog")({
 });
 
 function Blog() {
-  const { data: posts = [], isLoading } = useQuery({
+  const {
+    data: posts = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["blog-public"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -84,15 +92,15 @@ function Blog() {
       />
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         {isLoading ? (
-          <p className="text-center text-sm text-muted-foreground">Loading posts…</p>
+          <PublicQueryLoading message="Loading posts…" />
+        ) : isError ? (
+          <PublicQueryError message={publicQueryErrorMessage(error)} onRetry={() => refetch()} />
         ) : posts.length === 0 ? (
-          <div className="card-ngo mx-auto max-w-xl p-10 text-center">
-            <BookOpen className="mx-auto h-10 w-10 text-primary/50" />
-            <p className="mt-4 text-lg font-semibold">No posts yet</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Stories and updates will appear here as soon as they're published.
-            </p>
-          </div>
+          <PublicQueryEmpty
+            icon={<BookOpen className="mx-auto h-10 w-10 text-primary/50" aria-hidden />}
+            title="No posts yet"
+            description="Stories and updates will appear here as soon as they're published."
+          />
         ) : (
           <>
             {featured && (
@@ -118,7 +126,10 @@ function Blog() {
                       {featured.excerpt}
                     </p>
                   )}
-                  <Link to="/blog" className="prose-link mt-6 inline-flex items-center gap-1 text-sm">
+                  <Link
+                    to="/blog"
+                    className="prose-link mt-6 inline-flex items-center gap-1 text-sm"
+                  >
                     Read full story <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
@@ -168,4 +179,3 @@ function Blog() {
     </>
   );
 }
-

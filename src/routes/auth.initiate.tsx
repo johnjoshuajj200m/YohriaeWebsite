@@ -72,7 +72,9 @@ function AuthInitiate() {
         ) : (
           <>
             <p className="text-sm font-semibold text-foreground">Redirecting to Google…</p>
-            <p className="mt-2 text-sm text-muted-foreground">Please wait while we open secure sign-in.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Please wait while we open secure sign-in.
+            </p>
           </>
         )}
       </div>

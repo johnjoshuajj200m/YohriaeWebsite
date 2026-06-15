@@ -11,5 +11,5 @@ export const Route = createFileRoute("/founder")({
       path: "/founder",
       type: "profile",
       jsonLd: buildFounderPageSchema(),
-    })
+    }),
 });

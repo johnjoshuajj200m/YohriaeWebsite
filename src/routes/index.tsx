@@ -12,15 +12,15 @@ import {
 } from "lucide-react";
 import { CountUpStat } from "@/components/CountUpStat";
 import { HeroAnnouncement, HeroSection } from "@/components/HeroSection";
-import { SectionHeader } from "@/components/SectionHeader";
-import { IMAGES, PROGRAM_IMAGES } from "@/assets/images";
 import {
-  HOME_PROGRAMS,
-  IMPACT_STATS,
-  SITE,
-  TESTIMONIALS,
-} from "@/lib/site-config";
-import { analyticsEvents } from "@/lib/analytics";
+  PublicQueryError,
+  PublicQueryLoading,
+  publicQueryErrorMessage,
+} from "@/components/PublicQueryState";
+import { SectionHeader } from "@/components/SectionHeader";
+import { HOME_IMAGES, HOME_PROGRAM_IMAGES } from "@/assets/home-images";
+import { HOME_PROGRAMS, IMPACT_STATS, SITE, TESTIMONIALS } from "@/lib/site-config";
+import { trackDonateClick, trackPartnerClick } from "@/lib/analytics-clicks";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPageHead } from "@/lib/seo";
 import { buildHomePageSchema } from "@/lib/schema";
@@ -41,8 +41,8 @@ export const Route = createFileRoute("/")({
           rel: "preload",
           as: "image",
           href: HERO_LCP.preloadHref,
-          imageSrcSet: HERO_LCP.srcSet,
-          imageSizes: HERO_LCP.sizes,
+          imageSrcSet: HERO_LCP.preloadSrcSet,
+          imageSizes: HERO_LCP.preloadSizes,
           fetchPriority: "high",
         },
         ...pageHead.links,
@@ -57,7 +57,7 @@ const STAT_ACCENTS = ["#C2188F", "#00A7C8", "#F5A623", "#0F4C81"] as const;
 const FEATURED_PROGRAMS = [
   {
     ...HOME_PROGRAMS[0],
-    image: PROGRAM_IMAGES.health,
+    image: HOME_PROGRAM_IMAGES.health,
     category: "Health",
     metrics: [
       { value: "1,800+", label: "People reached" },
@@ -66,7 +66,7 @@ const FEATURED_PROGRAMS = [
   },
   {
     ...HOME_PROGRAMS[1],
-    image: PROGRAM_IMAGES.rights,
+    image: HOME_PROGRAM_IMAGES.rights,
     category: "Advocacy",
     metrics: [
       { value: "30+", label: "Sessions delivered" },
@@ -97,7 +97,13 @@ const FOCUS_AREAS = [
 ] as const;
 
 function Home() {
-  const { data: events = [] } = useQuery({
+  const {
+    data: events = [],
+    isLoading: eventsLoading,
+    isError: eventsError,
+    error: eventsErr,
+    refetch: refetchEvents,
+  } = useQuery({
     queryKey: ["events-home"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -111,7 +117,13 @@ function Home() {
     },
   });
 
-  const { data: posts = [] } = useQuery({
+  const {
+    data: posts = [],
+    isLoading: postsLoading,
+    isError: postsError,
+    error: postsErr,
+    refetch: refetchPosts,
+  } = useQuery({
     queryKey: ["blog-home"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -187,9 +199,10 @@ function Home() {
           <div className="order-1 lg:order-2">
             <div className="relative">
               <img
-                src={IMAGES.about}
+                src={HOME_IMAGES.about}
                 alt="YOHRIAE advocacy session with community members"
                 loading="lazy"
+                decoding="async"
                 width={1280}
                 height={896}
                 className="aspect-[4/3] w-full rounded-sm object-cover shadow-soft"
@@ -215,17 +228,12 @@ function Home() {
           {/* Focus areas — compact 3-up overview */}
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-6">
             {FOCUS_AREAS.map(({ title, desc, Icon, accent }) => (
-              <article
-                key={title}
-                className="card-ngo card-lift flex flex-col p-6 sm:p-7"
-              >
+              <article key={title} className="card-ngo card-lift flex flex-col p-6 sm:p-7">
                 <div className={`icon-box ${accent} h-10 w-10`}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                  {desc}
-                </p>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{desc}</p>
                 <Link
                   to="/programs"
                   className="prose-link mt-5 inline-flex items-center gap-1 text-sm"
@@ -298,7 +306,16 @@ function Home() {
               title="Convenings and community moments"
               description="Trainings, advocacy dialogues, and outreach activities across Northern Nigeria."
             />
-            {events.length === 0 ? (
+            {eventsLoading ? (
+              <PublicQueryLoading message="Loading events…" className="mt-8 py-6" />
+            ) : eventsError ? (
+              <PublicQueryError
+                className="mt-8"
+                title="Events unavailable"
+                message={publicQueryErrorMessage(eventsErr)}
+                onRetry={() => refetchEvents()}
+              />
+            ) : events.length === 0 ? (
               <div className="card-ngo mt-8 p-7 text-center sm:p-8">
                 <Calendar className="mx-auto h-8 w-8 text-primary/60" />
                 <p className="mt-3 text-sm text-muted-foreground">
@@ -343,7 +360,16 @@ function Home() {
               title="Stories and updates from our work"
               description="Reports, reflections, and impact stories from our communities and team."
             />
-            {posts.length === 0 ? (
+            {postsLoading ? (
+              <PublicQueryLoading message="Loading stories…" className="mt-8 py-6" />
+            ) : postsError ? (
+              <PublicQueryError
+                className="mt-8"
+                title="Stories unavailable"
+                message={publicQueryErrorMessage(postsErr)}
+                onRetry={() => refetchPosts()}
+              />
+            ) : posts.length === 0 ? (
               <div className="card-ngo mt-8 p-7 text-center sm:p-8">
                 <BookOpen className="mx-auto h-8 w-8 text-primary/60" />
                 <p className="mt-3 text-sm text-muted-foreground">
@@ -357,10 +383,7 @@ function Home() {
               <ul className="mt-8 space-y-4">
                 {posts.map((p) => (
                   <li key={p.id}>
-                    <Link
-                      to="/blog"
-                      className="card-ngo card-lift group block overflow-hidden"
-                    >
+                    <Link to="/blog" className="card-ngo card-lift group block overflow-hidden">
                       <div className="grid sm:grid-cols-[120px_1fr]">
                         {p.featured_image_url ? (
                           <img
@@ -443,7 +466,7 @@ function Home() {
           </Link>
         </div>
         <div className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-3">
-          {[IMAGES.impactHealth, IMAGES.impactMentalHealth, IMAGES.partner].map((src, i) => (
+          {[HOME_IMAGES.impactHealth, HOME_IMAGES.impactMentalHealth, HOME_IMAGES.partner].map((src, i) => (
             <img
               key={i}
               src={src}
@@ -477,22 +500,21 @@ function Home() {
                 Partner with or support YOHRIAE
               </h2>
               <p className="mt-4 max-w-xl text-[0.95rem] leading-relaxed text-white/85 sm:text-base">
-                We collaborate with donors, NGOs, government agencies, youth networks, and
-                community leaders to scale accountable local impact across health, rights, and
-                empowerment.
+                We collaborate with donors, NGOs, government agencies, youth networks, and community
+                leaders to scale accountable local impact across health, rights, and empowerment.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
               <Link
                 to="/donate"
-                onClick={() => analyticsEvents.donateClick("home_donate_cta")}
+                onClick={() => trackDonateClick("home_donate_cta")}
                 className="inline-flex items-center justify-center gap-2 rounded-sm bg-white px-6 py-3.5 text-sm font-semibold text-primary transition-colors hover:bg-white/95"
               >
                 Donate
               </Link>
               <Link
                 to="/partner"
-                onClick={() => analyticsEvents.partnerClick("home_donate_cta")}
+                onClick={() => trackPartnerClick("home_donate_cta")}
                 className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/40 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:border-[var(--brand-cyan)] hover:bg-white/10"
               >
                 <Handshake className="h-4 w-4" /> Become a Partner

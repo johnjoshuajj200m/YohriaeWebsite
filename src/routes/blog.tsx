@@ -14,5 +14,5 @@ export const Route = createFileRoute("/blog")({
         "YOHRIAE stories, insights, advocacy wins, and program updates — youth voices and community impact from Northern Nigeria.",
       path: "/blog",
       jsonLd: buildBlogPageSchema(loaderData?.postsForSchema ?? []),
-    })
+    }),
 });

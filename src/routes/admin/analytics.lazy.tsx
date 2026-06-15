@@ -15,10 +15,7 @@ import {
   YAxis,
 } from "recharts";
 import { AdminPageHeader, AdminStatCard } from "@/components/admin/AdminUI";
-import {
-  AnalyticsErrorState,
-  AnalyticsPageSkeleton,
-} from "@/components/admin/AnalyticsSkeleton";
+import { AnalyticsErrorState, AnalyticsPageSkeleton } from "@/components/admin/AnalyticsSkeleton";
 import { useAdminAnalytics } from "@/hooks/useAdminAnalytics";
 import {
   GA4_DATE_RANGE_OPTIONS,
@@ -105,10 +102,22 @@ function AdminAnalytics() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-            <AdminStatCard label="Total users" value={data.totalUsers.toLocaleString()} accent="primary" />
-            <AdminStatCard label="Active users" value={data.activeUsers.toLocaleString()} accent="magenta" />
+            <AdminStatCard
+              label="Total users"
+              value={data.totalUsers.toLocaleString()}
+              accent="primary"
+            />
+            <AdminStatCard
+              label="Active users"
+              value={data.activeUsers.toLocaleString()}
+              accent="magenta"
+            />
             <AdminStatCard label="New users" value={data.newUsers.toLocaleString()} accent="cyan" />
-            <AdminStatCard label="Page views" value={data.pageViews.toLocaleString()} accent="gold" />
+            <AdminStatCard
+              label="Page views"
+              value={data.pageViews.toLocaleString()}
+              accent="gold"
+            />
             <AdminStatCard label="Sessions" value={data.sessions.toLocaleString()} accent="cyan" />
           </div>
 
@@ -116,7 +125,9 @@ function AdminAnalytics() {
             <section className="brand-card rounded-xl border border-border bg-background p-6">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Audience</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Audience
+                  </p>
                   <h2 className="text-lg font-bold">Users over time</h2>
                 </div>
                 <span className="rounded-md bg-surface px-3 py-1 text-xs font-semibold text-primary">
@@ -155,7 +166,9 @@ function AdminAnalytics() {
             </section>
 
             <section className="brand-card rounded-xl border border-border bg-background p-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Acquisition</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Acquisition
+              </p>
               <h2 className="text-lg font-bold">Traffic sources</h2>
               <div className="mt-4 h-72">
                 {data.trafficSources.length === 0 ? (
@@ -185,7 +198,10 @@ function AdminAnalytics() {
                 {data.trafficSources.map((s, i) => (
                   <div key={s.label} className="flex justify-between text-xs">
                     <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ background: COLORS[i % COLORS.length] }}
+                      />
                       {s.label}
                     </span>
                     <span className="text-muted-foreground">{s.share}%</span>
@@ -197,7 +213,9 @@ function AdminAnalytics() {
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
             <section className="brand-card rounded-xl border border-border bg-background p-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Content</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Content
+              </p>
               <h2 className="text-lg font-bold">Most visited pages</h2>
               <div className="mt-6 h-64">
                 {data.topPages.length === 0 ? (
@@ -219,7 +237,9 @@ function AdminAnalytics() {
             </section>
 
             <section className="brand-card rounded-xl border border-border bg-background p-6">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Audience profile</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Audience profile
+              </p>
               <h2 className="text-lg font-bold">Device categories & top countries</h2>
               <div className="mt-4 space-y-5">
                 <div>
@@ -227,7 +247,9 @@ function AdminAnalytics() {
                     Device category
                   </p>
                   {data.devices.length === 0 ? (
-                    <p className="mt-2 text-sm text-muted-foreground">No device data for this period.</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      No device data for this period.
+                    </p>
                   ) : (
                     <div className="mt-2 space-y-2">
                       {data.devices.map((d) => (
@@ -252,7 +274,9 @@ function AdminAnalytics() {
                     Top countries
                   </p>
                   {data.countries.length === 0 ? (
-                    <p className="mt-2 text-sm text-muted-foreground">No country data for this period.</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      No country data for this period.
+                    </p>
                   ) : (
                     <div className="mt-2 space-y-2">
                       {data.countries.map((c) => (
@@ -274,4 +298,3 @@ function AdminAnalytics() {
     </>
   );
 }
-

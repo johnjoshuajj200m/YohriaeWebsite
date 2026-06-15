@@ -28,7 +28,9 @@ function isJsonContentType(contentType: string) {
 /**
  * Loads GA4 admin analytics via POST /api/analytics (JSON-only Vercel server route).
  */
-export async function fetchAdminAnalyticsApi(range: Ga4DateRange): Promise<AdminAnalyticsApiResult> {
+export async function fetchAdminAnalyticsApi(
+  range: Ga4DateRange,
+): Promise<AdminAnalyticsApiResult> {
   const url = ANALYTICS_API_PATH;
   console.info("[ga4] Calling analytics API at", url, "range:", range);
 
@@ -98,7 +100,9 @@ export async function fetchAdminAnalyticsApi(range: Ga4DateRange): Promise<Admin
   if (!result.ok) {
     const error = sanitizeAnalyticsError(String(result.error ?? ""));
     const details =
-      typeof result.details === "string" && result.details.trim() ? result.details.trim() : undefined;
+      typeof result.details === "string" && result.details.trim()
+        ? result.details.trim()
+        : undefined;
     logAnalyticsFetchFailed({
       url,
       status: response.status,
@@ -109,7 +113,12 @@ export async function fetchAdminAnalyticsApi(range: Ga4DateRange): Promise<Admin
   }
 
   if (result.analytics?.source !== "ga4") {
-    logAnalyticsFetchFailed({ url, status: response.status, contentType, detail: "invalid payload shape" });
+    logAnalyticsFetchFailed({
+      url,
+      status: response.status,
+      contentType,
+      detail: "invalid payload shape",
+    });
     return { ok: false, error: ANALYTICS_API_UNREACHABLE };
   }
 

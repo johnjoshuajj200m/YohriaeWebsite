@@ -10,5 +10,5 @@ export const Route = createFileRoute("/contact")({
         "Get in touch with YOHRIAE for partnerships, media, volunteering, or general inquiries. Email, WhatsApp, and phone contact details for Northern Nigeria.",
       path: "/contact",
       jsonLd: buildContactPageSchema(),
-    })
+    }),
 });

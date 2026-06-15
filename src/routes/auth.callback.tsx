@@ -79,7 +79,11 @@ function AuthCallback() {
       const email = sessionData.session?.user?.email;
       if (!userId) {
         if (!cancelled) {
-          navigate({ to: "/auth", search: { error: "Sign-in failed. Please try again." }, replace: true });
+          navigate({
+            to: "/auth",
+            search: { error: "Sign-in failed. Please try again." },
+            replace: true,
+          });
         }
         return;
       }
@@ -89,7 +93,9 @@ function AuthCallback() {
         if (!cancelled) {
           navigate({
             to: "/auth",
-            search: { error: "Access denied. This account is not authorized for the admin dashboard." },
+            search: {
+              error: "Access denied. This account is not authorized for the admin dashboard.",
+            },
             replace: true,
           });
         }

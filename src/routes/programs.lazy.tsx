@@ -78,49 +78,51 @@ function Programs() {
         />
 
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
-          {others.map(({ Icon, title, tagline, body, focus, imageKey, stat, outcome, category }) => (
-            <article key={title} className="card-ngo overflow-hidden">
-              <img
-                src={PROGRAM_IMAGES[imageKey]}
-                alt={title}
-                width={1280}
-                height={720}
-                loading="lazy"
-                decoding="async"
-                className="aspect-[16/9] w-full object-cover"
-              />
-              <div className="p-7">
-                <div className="flex items-start gap-4">
-                  <div className="icon-box h-11 w-11 shrink-0">
-                    <Icon className="h-5 w-5" />
+          {others.map(
+            ({ Icon, title, tagline, body, focus, imageKey, stat, outcome, category }) => (
+              <article key={title} className="card-ngo overflow-hidden">
+                <img
+                  src={PROGRAM_IMAGES[imageKey]}
+                  alt={title}
+                  width={1280}
+                  height={720}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[16/9] w-full object-cover"
+                />
+                <div className="p-7">
+                  <div className="flex items-start gap-4">
+                    <div className="icon-box h-11 w-11 shrink-0">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                        {category}
+                      </p>
+                      <h2 className="text-lg font-semibold">{title}</h2>
+                      <p className="text-sm text-muted-foreground">{tagline}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                      {category}
+                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{body}</p>
+                  <div className="mt-5 rounded-sm bg-surface p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Impact
                     </p>
-                    <h2 className="text-lg font-semibold">{title}</h2>
-                    <p className="text-sm text-muted-foreground">{tagline}</p>
+                    <p className="mt-1 text-sm font-bold text-primary">{stat}</p>
+                    <p className="mt-2 text-sm text-foreground">{outcome}</p>
                   </div>
+                  <ul className="mt-4 grid gap-1.5 text-sm text-foreground/85">
+                    {focus.map((f) => (
+                      <li key={f} className="flex items-start gap-2">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{body}</p>
-                <div className="mt-5 rounded-sm bg-surface p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Impact
-                  </p>
-                  <p className="mt-1 text-sm font-bold text-primary">{stat}</p>
-                  <p className="mt-2 text-sm text-foreground">{outcome}</p>
-                </div>
-                <ul className="mt-4 grid gap-1.5 text-sm text-foreground/85">
-                  {focus.map((f) => (
-                    <li key={f} className="flex items-start gap-2">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-          ))}
+              </article>
+            ),
+          )}
         </div>
       </section>
 

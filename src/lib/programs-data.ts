@@ -1,14 +1,5 @@
 import { PROGRAM_IMAGES } from "@/assets/images";
-import {
-  Brain,
-  GraduationCap,
-  Heart,
-  Megaphone,
-  Scale,
-  Shield,
-  Sprout,
-  Users,
-} from "lucide-react";
+import { Brain, GraduationCap, Heart, Megaphone, Scale, Shield, Sprout, Users } from "lucide-react";
 
 export const PROGRAMS: {
   Icon: typeof Heart;

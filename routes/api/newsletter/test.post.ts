@@ -1,6 +1,4 @@
-import {
-  respondToNewsletterTestRequestLazy,
-} from "../../../src/lib/api/server-api-routes.server";
+import { respondToNewsletterTestRequestLazy } from "../../../src/lib/api/server-api-routes.server";
 
 type NitroApiEvent = {
   req: Request;

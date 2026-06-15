@@ -11,5 +11,5 @@ export const Route = createFileRoute("/volunteer")({
         "Use your time and skills to support YOHRIAE's youth health, human rights, advocacy, and community outreach programs across Northern Nigeria.",
       path: "/volunteer",
       jsonLd: buildVolunteerPageSchema([...VOLUNTEER_OPPORTUNITIES]),
-    })
+    }),
 });

@@ -422,8 +422,7 @@
   &:focus-visible {
     outline: none;
     border-color: var(--brand-magenta);
-    box-shadow:
-      0 0 0 3px color-mix(in srgb, var(--brand-magenta) 18%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-magenta) 18%, transparent);
   }
   &:disabled {
     opacity: 0.6;
@@ -453,8 +452,7 @@
     outline: none;
     border-color: var(--brand-magenta);
     background-color: var(--background);
-    box-shadow:
-      0 0 0 4px color-mix(in srgb, var(--brand-magenta) 14%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-magenta) 14%, transparent);
   }
   @media (width >= 640px) {
     padding: 0.8125rem 1rem;
@@ -536,11 +534,7 @@
     display: block;
     width: 1.5rem;
     height: 2px;
-    background: linear-gradient(
-      90deg,
-      var(--brand-magenta) 0%,
-      var(--brand-cyan) 100%
-    );
+    background: linear-gradient(90deg, var(--brand-magenta) 0%, var(--brand-cyan) 100%);
     border-radius: 999px;
   }
 
@@ -687,11 +681,7 @@
     width: 2.5rem;
     height: 3px;
     border-radius: 999px;
-    background: linear-gradient(
-      90deg,
-      var(--brand-magenta) 0%,
-      var(--brand-cyan) 100%
-    );
+    background: linear-gradient(90deg, var(--brand-magenta) 0%, var(--brand-cyan) 100%);
   }
 
   .prose-link {

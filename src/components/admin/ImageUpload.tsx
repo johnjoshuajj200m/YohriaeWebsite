@@ -44,13 +44,11 @@ export function ImageUpload({
           ? crypto.randomUUID()
           : `${Date.now()}-${Math.random().toString(36).slice(2)}`) + (ext ? `.${ext}` : "");
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(safeName, file, {
-          cacheControl: "31536000",
-          contentType: file.type,
-          upsert: false,
-        });
+      const { error: uploadError } = await supabase.storage.from(bucket).upload(safeName, file, {
+        cacheControl: "31536000",
+        contentType: file.type,
+        upsert: false,
+      });
 
       if (uploadError) throw uploadError;
 

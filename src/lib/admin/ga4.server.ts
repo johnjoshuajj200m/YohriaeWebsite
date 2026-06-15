@@ -181,11 +181,7 @@ export function getGa4Credentials():
 
 function base64UrlEncode(input: Buffer | string) {
   const buf = typeof input === "string" ? Buffer.from(input) : input;
-  return buf
-    .toString("base64")
-    .replace(/=+$/, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
+  return buf.toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
 function signServiceAccountJwt(clientEmail: string, privateKey: string) {
@@ -408,11 +404,7 @@ async function fetchTimeSeries(accessToken: string, propertyId: string, range: G
     body: {
       dateRanges: [rangeToDates(range)],
       dimensions: [{ name: dimensionName }],
-      metrics: [
-        { name: "activeUsers" },
-        { name: "screenPageViews" },
-        { name: "sessions" },
-      ],
+      metrics: [{ name: "activeUsers" }, { name: "screenPageViews" }, { name: "sessions" }],
       orderBys: [{ dimension: { dimensionName } }],
     },
   });
@@ -481,7 +473,11 @@ async function fetchTopPages(
   return withViewShares(items);
 }
 
-function classifyGa4Error(message: string, propertyId: string, clientEmail: string): string | undefined {
+function classifyGa4Error(
+  message: string,
+  propertyId: string,
+  clientEmail: string,
+): string | undefined {
   const lower = message.toLowerCase();
   if (lower.includes("permission_denied") || lower.includes("permission denied")) {
     return `Grant the service account ${clientEmail} Viewer access on GA4 property ${propertyId} (GA4 Admin → Property → Property Access Management).`;

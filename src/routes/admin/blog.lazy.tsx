@@ -8,12 +8,7 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { useAdminSession } from "@/hooks/useAdminSession";
 import { formatShortDate, slugify } from "@/lib/admin/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createLazyFileRoute } from "@tanstack/react-router";
 
 export const Route = createLazyFileRoute("/admin/blog")({
@@ -53,7 +48,11 @@ function AdminBlog() {
   const [form, setForm] = useState<BlogForm>(emptyForm());
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: posts = [], isLoading, error } = useQuery({
+  const {
+    data: posts = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["admin-blog"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -155,7 +154,12 @@ function AdminBlog() {
   }
 
   if (!permissions.canViewBlog) {
-    return <EmptyState title="Access restricted" description="You do not have permission to view blog posts." />;
+    return (
+      <EmptyState
+        title="Access restricted"
+        description="You do not have permission to view blog posts."
+      />
+    );
   }
 
   return (
@@ -165,7 +169,11 @@ function AdminBlog() {
         description="Create, edit, publish, and preview stories for the public website."
         action={
           permissions.canManageBlog ? (
-            <button type="button" onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
+            <button
+              type="button"
+              onClick={openCreate}
+              className="btn-primary inline-flex items-center gap-2"
+            >
               <Plus className="h-4 w-4" /> New post
             </button>
           ) : undefined
@@ -184,7 +192,10 @@ function AdminBlog() {
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading posts…</p>
       ) : posts.length === 0 ? (
-        <EmptyState title="No blog posts yet" description="Create your first story to publish on the public blog page." />
+        <EmptyState
+          title="No blog posts yet"
+          description="Create your first story to publish on the public blog page."
+        />
       ) : (
         <>
           {/* Mobile cards */}
@@ -479,9 +490,7 @@ function AdminBlog() {
               </p>
               <h2 className="mt-2 text-2xl font-bold">{preview.title}</h2>
               <p className="mt-1 text-sm text-muted-foreground">By {preview.author}</p>
-              {preview.excerpt && (
-                <p className="mt-4 text-muted-foreground">{preview.excerpt}</p>
-              )}
+              {preview.excerpt && <p className="mt-4 text-muted-foreground">{preview.excerpt}</p>}
               <div className="prose prose-sm mt-6 max-w-none whitespace-pre-wrap">
                 {preview.content}
               </div>
@@ -541,4 +550,3 @@ function Field({
     </label>
   );
 }
-

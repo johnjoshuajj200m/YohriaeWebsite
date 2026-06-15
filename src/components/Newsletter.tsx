@@ -70,7 +70,9 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
             Updates on programs, advocacy, and community initiatives.
           </p>
           {status === "done" ? (
-            <p className={`mt-3 text-sm font-medium ${dark ? "text-[var(--brand-cyan)]" : "text-primary"}`}>
+            <p
+              className={`mt-3 text-sm font-medium ${dark ? "text-[var(--brand-cyan)]" : "text-primary"}`}
+            >
               {doneMessage}
             </p>
           ) : (
@@ -101,9 +103,7 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
                 type="submit"
                 disabled={status === "sending"}
                 className={`w-full shrink-0 rounded-md px-4 py-2.5 text-sm font-semibold disabled:opacity-60 sm:w-auto ${
-                  dark
-                    ? "bg-white text-primary hover:bg-white/95"
-                    : "btn-primary"
+                  dark ? "bg-white text-primary hover:bg-white/95" : "btn-primary"
                 }`}
               >
                 {status === "sending" ? "Subscribing…" : "Subscribe"}
@@ -111,7 +111,9 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
             </form>
           )}
           {status === "error" && (
-            <p className="mt-2 text-sm text-destructive">Subscription failed. Please try again later.</p>
+            <p className="mt-2 text-sm text-destructive">
+              Subscription failed. Please try again later.
+            </p>
           )}
           <p
             id="newsletter-privacy"

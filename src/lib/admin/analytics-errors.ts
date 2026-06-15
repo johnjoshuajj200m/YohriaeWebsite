@@ -54,8 +54,7 @@ export function normalizeGa4Error(message: string) {
 }
 
 export function getAnalyticsErrorDisplay(error: unknown) {
-  const raw =
-    error instanceof Error ? error.message : "Could not load Google Analytics data.";
+  const raw = error instanceof Error ? error.message : "Could not load Google Analytics data.";
   const message = sanitizeAnalyticsError(raw);
   const details =
     error && typeof error === "object" && "details" in error

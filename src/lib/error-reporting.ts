@@ -15,14 +15,12 @@ type ClientErrorReporter = {
 declare global {
   interface Window {
     __clientErrorReporter?: ClientErrorReporter;
-    /** @deprecated Legacy hook — use __clientErrorReporter */
-    __lovableEvents?: ClientErrorReporter;
   }
 }
 
 export function reportClientError(error: unknown, context: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
-  const reporter = window.__clientErrorReporter ?? window.__lovableEvents;
+  const reporter = window.__clientErrorReporter;
   reporter?.captureException?.(
     error,
     {

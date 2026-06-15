@@ -10,5 +10,5 @@ export const Route = createFileRoute("/donate")({
         "Your gift supports YOHRIAE's community work on youth health, human rights, advocacy, and empowerment in Northern Nigeria. Give securely today.",
       path: "/donate",
       jsonLd: buildDonatePageSchema(),
-    })
+    }),
 });

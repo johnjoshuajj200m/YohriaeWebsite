@@ -17,5 +17,5 @@ export const Route = createFileRoute("/programs")({
           serviceType: p.category,
         })),
       ),
-    })
+    }),
 });

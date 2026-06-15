@@ -3,7 +3,11 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { dispatchServerApiRoute } from "./lib/api/server-api-routes.server";
-import { isJsonApiRequest, jsonErrorResponse, jsonGa4UnhandledError } from "./lib/api/json-response.server";
+import {
+  isJsonApiRequest,
+  jsonErrorResponse,
+  jsonGa4UnhandledError,
+} from "./lib/api/json-response.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -33,10 +37,8 @@ async function normalizeCatastrophicSsrResponse(
     return response;
   }
 
-  const captured =
-    consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`);
-  const capturedMessage =
-    captured instanceof Error ? captured.message : "Server error.";
+  const captured = consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`);
+  const capturedMessage = captured instanceof Error ? captured.message : "Server error.";
   console.error("[ga4] SSR catastrophic error:", captured);
 
   if (isJsonApiRequest(request)) {

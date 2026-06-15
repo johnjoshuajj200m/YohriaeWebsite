@@ -3,6 +3,12 @@ import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, ExternalLink, MapPin } from "lucide-react";
+import {
+  PublicQueryEmpty,
+  PublicQueryError,
+  PublicQueryLoading,
+  publicQueryErrorMessage,
+} from "@/components/PublicQueryState";
 import { analyticsEvents } from "@/lib/analytics";
 import { buildPageHead } from "@/lib/seo";
 import { buildEventsPageSchema } from "@/lib/schema";
@@ -14,7 +20,13 @@ export const Route = createLazyFileRoute("/events")({
 });
 
 function Events() {
-  const { data: events = [], isLoading } = useQuery({
+  const {
+    data: events = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["events-public"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -39,15 +51,15 @@ function Events() {
       />
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         {isLoading ? (
-          <p className="text-center text-sm text-muted-foreground">Loading events…</p>
+          <PublicQueryLoading message="Loading events…" />
+        ) : isError ? (
+          <PublicQueryError message={publicQueryErrorMessage(error)} onRetry={() => refetch()} />
         ) : events.length === 0 ? (
-          <div className="card-ngo mx-auto max-w-xl p-10 text-center">
-            <Calendar className="mx-auto h-10 w-10 text-primary/50" />
-            <p className="mt-4 text-lg font-semibold">No events yet</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Upcoming events will be listed here. Subscribe via the footer to be notified.
-            </p>
-          </div>
+          <PublicQueryEmpty
+            icon={<Calendar className="mx-auto h-10 w-10 text-primary/50" aria-hidden />}
+            title="No events yet"
+            description="Upcoming events will be listed here. Subscribe via the footer to be notified."
+          />
         ) : (
           <>
             {upcoming.length > 0 && (
@@ -139,4 +151,3 @@ function EventCard({
     </li>
   );
 }
-

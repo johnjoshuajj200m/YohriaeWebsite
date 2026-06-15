@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,21 +32,35 @@ export function AdminSessionProvider({ children }: { children: ReactNode }) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
-        navigate({ to: "/auth", replace: true });
-      } else {
-        setUserId(data.user.id);
-        setEmail(data.user.email ?? null);
-      }
-      setChecking(false);
-    });
+    let cancelled = false;
+
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (!data.user) {
+          navigate({ to: "/auth", replace: true });
+        } else {
+          setUserId(data.user.id);
+          setEmail(data.user.email ?? null);
+        }
+      })
+      .catch((err) => {
+        console.error("[admin] Failed to load session:", err);
+        if (!cancelled) navigate({ to: "/auth", replace: true });
+      })
+      .finally(() => {
+        if (!cancelled) setChecking(false);
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") navigate({ to: "/auth", replace: true });
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const { data: roles = [], isPending: rolesLoading } = useQuery({

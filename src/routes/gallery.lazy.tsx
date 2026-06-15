@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
+import {
+  PublicQueryError,
+  PublicQueryLoading,
+  PublicQueryNotice,
+  publicQueryErrorMessage,
+} from "@/components/PublicQueryState";
 import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { GALLERY } from "@/assets/images";
@@ -38,7 +44,13 @@ function Gallery() {
   const [lightbox, setLightbox] = useState<GalleryImage | null>(null);
   const [active, setActive] = useState<(typeof CATEGORIES)[number]>("All");
 
-  const { data: images = [] } = useQuery({
+  const {
+    data: images = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["gallery-public"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -57,7 +69,7 @@ function Gallery() {
     caption: g.caption,
   }));
 
-  const list: GalleryImage[] = images.length > 0 ? images : fallback;
+  const list: GalleryImage[] = isError || images.length === 0 ? fallback : images;
   const filtered =
     active === "All" ? list : list.filter((img) => getCategory(img.caption) === active);
 
@@ -70,57 +82,70 @@ function Gallery() {
         compact
       />
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-10 flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between">
-          <SectionHeader
-            eyebrow="Documentary archive"
-            title="Programs, trainings, outreach, and partners"
-            description="Browse field moments by collection. These images help donors and partners see the real work behind the reports."
-          />
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setActive(category)}
-                className={`rounded-sm border px-3 py-2 text-xs font-semibold transition-colors ${
-                  active === category
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-background text-muted-foreground hover:border-primary hover:text-primary"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
+        {isLoading ? (
+          <PublicQueryLoading message="Loading gallery…" />
+        ) : (
+          <>
+            <div className="mb-10 flex flex-col gap-6 border-b border-border pb-8 lg:flex-row lg:items-end lg:justify-between">
+              <SectionHeader
+                eyebrow="Documentary archive"
+                title="Programs, trainings, outreach, and partners"
+                description="Browse field moments by collection. These images help donors and partners see the real work behind the reports."
+              />
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setActive(category)}
+                    className={`rounded-sm border px-3 py-2 text-xs font-semibold transition-colors ${
+                      active === category
+                        ? "border-primary bg-primary text-white"
+                        : "border-border bg-background text-muted-foreground hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((img) => (
-            <figure key={img.id} className="card-ngo group overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setLightbox(img)}
-                className="block w-full text-left"
-                aria-label={img.caption ? `View: ${img.caption}` : "View image"}
-              >
-                <img
-                  src={img.image_url}
-                  alt={img.caption ?? "YOHRIAE program photograph"}
-                  width={1280}
-                  height={960}
-                  loading="lazy"
-                  decoding="async"
-                  className="aspect-[4/3] w-full object-cover"
-                />
-                {img.caption && (
-                  <figcaption className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
-                    {img.caption}
-                  </figcaption>
-                )}
-              </button>
-            </figure>
-          ))}
-        </div>
+            {isError ? (
+              <PublicQueryNotice
+                message={`We couldn't refresh the gallery right now (${publicQueryErrorMessage(error)}). Showing selected program photos.`}
+                onRetry={() => refetch()}
+              />
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((img) => (
+                <figure key={img.id} className="card-ngo group overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setLightbox(img)}
+                    className="block w-full text-left"
+                    aria-label={img.caption ? `View: ${img.caption}` : "View image"}
+                  >
+                    <img
+                      src={img.image_url}
+                      alt={img.caption ?? "YOHRIAE program photograph"}
+                      width={1280}
+                      height={960}
+                      loading="lazy"
+                      decoding="async"
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                    {img.caption && (
+                      <figcaption className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
+                        {img.caption}
+                      </figcaption>
+                    )}
+                  </button>
+                </figure>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {lightbox && (
@@ -157,4 +182,3 @@ function Gallery() {
     </>
   );
 }
-

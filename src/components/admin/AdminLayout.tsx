@@ -73,8 +73,7 @@ function AdminShell() {
           <nav className="flex gap-2 overflow-x-auto px-4 pb-3">
             {MOBILE_LINKS.map((item) => {
               const active =
-                pathname === item.to ||
-                (item.to !== "/admin" && pathname.startsWith(item.to));
+                pathname === item.to || (item.to !== "/admin" && pathname.startsWith(item.to));
               return (
                 <Link
                   key={item.to}

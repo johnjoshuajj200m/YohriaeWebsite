@@ -14,7 +14,9 @@ export function AdminPageHeader({
       <div>
         <p className="text-eyebrow">YOHRIAE Admin</p>
         <h1 className="mt-1 text-2xl font-bold text-foreground sm:text-3xl">{title}</h1>
-        {description && <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{description}</p>
+        )}
       </div>
       {action}
     </div>
@@ -69,8 +71,10 @@ export function StatusBadge({ status }: { status: string }) {
     new: "bg-[color-mix(in_srgb,var(--brand-cyan)_12%,white)] text-primary border-[color-mix(in_srgb,var(--brand-cyan)_30%,white)]",
     read: "bg-surface text-muted-foreground border-border",
     replied: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    upcoming: "bg-[color-mix(in_srgb,var(--brand-cyan)_12%,white)] text-primary border-[color-mix(in_srgb,var(--brand-cyan)_30%,white)]",
-    ongoing: "bg-[color-mix(in_srgb,var(--brand-gold)_16%,white)] text-foreground border-[color-mix(in_srgb,var(--brand-gold)_35%,white)]",
+    upcoming:
+      "bg-[color-mix(in_srgb,var(--brand-cyan)_12%,white)] text-primary border-[color-mix(in_srgb,var(--brand-cyan)_30%,white)]",
+    ongoing:
+      "bg-[color-mix(in_srgb,var(--brand-gold)_16%,white)] text-foreground border-[color-mix(in_srgb,var(--brand-gold)_35%,white)]",
     past: "bg-surface text-muted-foreground border-border",
     active: "bg-emerald-50 text-emerald-700 border-emerald-200",
     inactive: "bg-surface text-muted-foreground border-border",

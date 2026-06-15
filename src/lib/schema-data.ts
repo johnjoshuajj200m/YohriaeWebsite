@@ -32,9 +32,7 @@ export async function fetchPublishedBlogPostsForSchema(): Promise<BlogPostSchema
     const { supabase } = await import("@/integrations/supabase/client");
     const { data, error } = await supabase
       .from("blog_posts")
-      .select(
-        "id, title, excerpt, published_at, updated_at, featured_image_url, slug, author",
-      )
+      .select("id, title, excerpt, published_at, updated_at, featured_image_url, slug, author")
       .eq("published", true)
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })

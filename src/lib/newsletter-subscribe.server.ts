@@ -1,23 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-
-function readEnv(...keys: string[]) {
-  for (const key of keys) {
-    const value = process.env[key]?.trim();
-    if (value) return value;
-  }
-  return undefined;
-}
+import {
+  readSupabaseAnonKey,
+  readSupabaseServiceRoleKey,
+  readSupabaseUrl,
+  validateSupabasePublicEnv,
+  validateSupabaseServiceEnv,
+} from "@/lib/env.server";
 
 export function getNewsletterSupabaseConfig() {
-  const url = readEnv("SUPABASE_URL", "VITE_SUPABASE_URL");
-  const serviceRoleKey = readEnv("SUPABASE_SERVICE_ROLE_KEY");
-  const publishableKey = readEnv(
-    "SUPABASE_PUBLISHABLE_KEY",
-    "VITE_SUPABASE_PUBLISHABLE_KEY",
-  );
-
-  return { url, serviceRoleKey, publishableKey };
+  return {
+    url: readSupabaseUrl(),
+    serviceRoleKey: readSupabaseServiceRoleKey(),
+    publishableKey: readSupabaseAnonKey(),
+  };
 }
 
 export type SaveSubscriberResult =
@@ -29,11 +25,12 @@ export async function saveNewsletterSubscriber(email: string): Promise<SaveSubsc
   const { url, serviceRoleKey, publishableKey } = getNewsletterSupabaseConfig();
 
   if (!url) {
-    console.error("[newsletter] Missing SUPABASE_URL (or VITE_SUPABASE_URL) on server.");
+    const publicEnv = validateSupabasePublicEnv();
+    console.error("[newsletter]", publicEnv.message);
     return {
       ok: false,
       duplicate: false,
-      message: "Server Supabase URL is not configured.",
+      message: publicEnv.message,
     };
   }
 
@@ -70,13 +67,12 @@ export async function saveNewsletterSubscriber(email: string): Promise<SaveSubsc
   }
 
   if (!publishableKey) {
-    console.error(
-      "[newsletter] Missing SUPABASE_SERVICE_ROLE_KEY and SUPABASE_PUBLISHABLE_KEY on server.",
-    );
+    const serviceEnv = validateSupabaseServiceEnv();
+    console.error("[newsletter]", serviceEnv.message);
     return {
       ok: false,
       duplicate: false,
-      message: "Server Supabase credentials are not configured.",
+      message: serviceEnv.message,
     };
   }
 

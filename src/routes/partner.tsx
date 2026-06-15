@@ -10,5 +10,5 @@ export const Route = createFileRoute("/partner")({
         "Partner with YOHRIAE to advance youth health, human rights, advocacy, and community empowerment programs in Northern Nigeria.",
       path: "/partner",
       jsonLd: buildPartnerPageSchema(),
-    })
+    }),
 });

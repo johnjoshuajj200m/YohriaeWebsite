@@ -1,3 +1,5 @@
+import { validateNewsletterEnv } from "@/lib/env.server";
+
 export const DEFAULT_NOTIFY_EMAILS = ["yohriae2019@gmail.com", "yohriaenigeria@gmail.com"] as const;
 export const DEFAULT_FROM = "YOHRIAE <newsletters@yohriae.com>";
 
@@ -42,9 +44,14 @@ export async function sendResendEmail(payload: {
   text: string;
   label: string;
 }): Promise<{ ok: boolean; error?: string; messageId?: string }> {
+  const env = validateNewsletterEnv();
+  if (!env.ok) {
+    return { ok: false, error: env.message };
+  }
+
   const apiKey = getResendApiKey();
   if (!apiKey) {
-    return { ok: false, error: "RESEND_API_KEY is not configured" };
+    return { ok: false, error: env.message };
   }
 
   try {

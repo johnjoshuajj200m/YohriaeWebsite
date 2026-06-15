@@ -189,11 +189,7 @@ function About() {
 
       <section className="border-t border-border bg-surface py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeader
-            eyebrow="Testimonials"
-            title="What people say about us"
-            align="center"
-          />
+          <SectionHeader eyebrow="Testimonials" title="What people say about us" align="center" />
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {TESTIMONIALS.map((t) => (
               <figure key={t.name} className="card-ngo p-6">
@@ -227,4 +223,3 @@ function About() {
     </>
   );
 }
-

@@ -15,7 +15,8 @@ export const SITE = {
   registration: "Registered Youth-Led Nonprofit Organization",
   social: {
     twitter: "https://x.com/yohriae",
-    facebook: "https://www.facebook.com/search/top?q=Youth%20Health%20and%20Right%20Initiative%20for%20Advocacy%20and%20Empowerment",
+    facebook:
+      "https://www.facebook.com/search/top?q=Youth%20Health%20and%20Right%20Initiative%20for%20Advocacy%20and%20Empowerment",
     instagram: "https://www.instagram.com/yohriae",
     linkedin: "https://www.linkedin.com/search/results/all/?keywords=YOHRIAE%20Nigeria",
     tiktok: "https://www.tiktok.com/@yohriae",

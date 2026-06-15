@@ -45,8 +45,8 @@ function Founder() {
                 YOHRIAE was founded in 2019 in response to the urgent gaps young people and
                 vulnerable communities in Northern Nigeria faced in accessing health, exercising
                 their rights and finding pathways to opportunity. Our founder has spent over a
-                decade alongside communities — listening, organising, and building the kind of
-                trust that turns conversations into change.
+                decade alongside communities — listening, organising, and building the kind of trust
+                that turns conversations into change.
               </p>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                 The vision is simple, but the work is hard: a Northern Nigeria where every young
@@ -64,4 +64,3 @@ function Founder() {
     </>
   );
 }
-

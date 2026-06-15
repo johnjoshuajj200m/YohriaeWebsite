@@ -330,9 +330,7 @@ export function buildBlogPageSchema(posts: BlogPostSchemaItem[]) {
       description: post.excerpt ?? undefined,
       datePublished: post.published_at ?? undefined,
       dateModified: post.updated_at ?? post.published_at ?? undefined,
-      author: post.author
-        ? { "@type": "Person", name: post.author }
-        : { "@id": ORG_ID },
+      author: post.author ? { "@type": "Person", name: post.author } : { "@id": ORG_ID },
       publisher: { "@id": ORG_ID },
       image: post.featured_image_url ?? undefined,
       url: `${pageUrl("/blog")}#post-${post.slug}`,

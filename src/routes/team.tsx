@@ -10,5 +10,5 @@ export const Route = createFileRoute("/team")({
         "Meet the people behind YOHRIAE — the leadership, staff, and advisors driving youth health, human rights, and empowerment programs in Northern Nigeria.",
       path: "/team",
       jsonLd: buildTeamPageSchema(),
-    })
+    }),
 });

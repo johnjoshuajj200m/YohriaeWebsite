@@ -2,6 +2,12 @@ import { PageHero } from "@/components/PageHero";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { IMAGES } from "@/assets/images";
+import {
+  PublicQueryError,
+  PublicQueryLoading,
+  PublicQueryNotice,
+  publicQueryErrorMessage,
+} from "@/components/PublicQueryState";
 import { buildPageHead } from "@/lib/seo";
 import { buildTeamPageSchema } from "@/lib/schema";
 import { createLazyFileRoute } from "@tanstack/react-router";
@@ -17,7 +23,13 @@ const TEAM_PHOTOS = [
 ] as const;
 
 function Team() {
-  const { data: members = [], isLoading } = useQuery({
+  const {
+    data: members = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["team-public"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,7 +52,36 @@ function Team() {
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {isLoading ? (
-          <p className="text-center text-sm text-muted-foreground">Loading team…</p>
+          <PublicQueryLoading message="Loading team…" />
+        ) : isError ? (
+          <>
+            <PublicQueryError message={publicQueryErrorMessage(error)} onRetry={() => refetch()} />
+            <PublicQueryNotice
+              className="mt-8"
+              message="Showing team photos from our programs while profiles are unavailable."
+            />
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {TEAM_PHOTOS.map(({ src, caption }) => (
+                <figure
+                  key={caption}
+                  className="brand-card group overflow-hidden rounded-lg border border-border"
+                >
+                  <img
+                    src={src}
+                    alt={caption}
+                    width={1280}
+                    height={960}
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                  <figcaption className="px-4 py-3 text-sm text-muted-foreground">
+                    {caption}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </>
         ) : members.length === 0 ? (
           <>
             <div className="mx-auto max-w-2xl text-center">
@@ -109,4 +150,3 @@ function Team() {
     </>
   );
 }
-

@@ -46,17 +46,19 @@ for (const name of LAZY_ROUTES) {
     .filter((line) => {
       const ids = [...line.matchAll(/(?:import\s+(?:\{([^}]+)\}|(\w+))|from)/g)]
         .flatMap((m) => (m[1] ?? m[2] ?? "").split(","))
-        .map((s) => s.trim().split(/\s+as\s+/)[0].trim())
+        .map((s) =>
+          s
+            .trim()
+            .split(/\s+as\s+/)[0]
+            .trim(),
+        )
         .filter(Boolean);
       return ids.some((id) => routeBlock.includes(id));
     });
 
   const needsCreateFileRoute = routeBlock.includes("createFileRoute");
   const imports = [...usedImports];
-  if (
-    needsCreateFileRoute &&
-    !imports.some((l) => l.includes("createFileRoute"))
-  ) {
+  if (needsCreateFileRoute && !imports.some((l) => l.includes("createFileRoute"))) {
     imports.push('import { createFileRoute } from "@tanstack/react-router";');
   }
 

@@ -4,6 +4,7 @@ import {
   getResendApiKey,
   sendResendEmail,
 } from "@/lib/newsletter.server";
+import { validateNewsletterEnv, validateSupabasePublicEnv } from "@/lib/env.server";
 import { jsonErrorResponse, jsonResponse } from "@/lib/api/json-response.server";
 
 function looksLikeEmail(value: string) {
@@ -32,20 +33,18 @@ export type NewsletterStatus = {
 };
 
 export function describeNewsletterStatus(): NewsletterStatus {
+  const validation = validateNewsletterEnv();
   const apiKey = getResendApiKey();
   const from = getFromAddress();
   const recipients = getAdminNotifyEmails();
 
-  const fromAddress = from.includes("<") ? from.slice(from.indexOf("<") + 1, from.indexOf(">")).trim() : from.trim();
-  const fromLooksValid = looksLikeEmail(fromAddress);
-  const adminRecipientsValid = recipients.length > 0 && recipients.every(looksLikeEmail);
+  const fromAddress = from.includes("<")
+    ? from.slice(from.indexOf("<") + 1, from.indexOf(">")).trim()
+    : from.trim();
+  const fromLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromAddress);
+  const adminRecipientsValid =
+    recipients.length > 0 && recipients.every((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
   const resendApiKeyConfigured = Boolean(apiKey);
-  const configured = resendApiKeyConfigured && fromLooksValid && adminRecipientsValid;
-
-  const issues: string[] = [];
-  if (!resendApiKeyConfigured) issues.push("RESEND_API_KEY is missing");
-  if (!fromLooksValid) issues.push("NEWSLETTER_FROM_EMAIL is missing or invalid (no usable address)");
-  if (!adminRecipientsValid) issues.push("ADMIN_NOTIFICATION_EMAILS does not contain valid emails");
 
   return {
     resendApiKeyConfigured,
@@ -58,8 +57,8 @@ export function describeNewsletterStatus(): NewsletterStatus {
       NEWSLETTER_FROM_EMAIL: Boolean(process.env.NEWSLETTER_FROM_EMAIL?.trim()),
       ADMIN_NOTIFICATION_EMAILS: Boolean(process.env.ADMIN_NOTIFICATION_EMAILS?.trim()),
     },
-    configured,
-    message: configured ? "Newsletter notifications are configured." : issues.join(" "),
+    configured: validation.ok,
+    message: validation.message,
   };
 }
 
@@ -67,17 +66,25 @@ async function getAuthenticatedAdminUserId(
   request: Request,
 ): Promise<{ ok: true; userId: string } | { ok: false; error: string; status: number }> {
   try {
-    const SUPABASE_URL =
-      process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim();
+    const publicEnv = validateSupabasePublicEnv();
+    if (!publicEnv.ok) {
+      return { ok: false, error: publicEnv.message, status: 500 };
+    }
+
+    const SUPABASE_URL = process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim();
     const SUPABASE_PUBLISHABLE_KEY =
       process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ??
       process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-      return { ok: false, error: "Supabase server configuration is missing.", status: 500 };
+      return { ok: false, error: publicEnv.message, status: 500 };
     }
     const authHeader = request.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return { ok: false, error: "Unauthorized: sign in as an admin to use this endpoint.", status: 401 };
+      return {
+        ok: false,
+        error: "Unauthorized: sign in as an admin to use this endpoint.",
+        status: 401,
+      };
     }
     const token = authHeader.replace("Bearer ", "").trim();
     if (!token) return { ok: false, error: "Unauthorized: missing access token.", status: 401 };
@@ -123,7 +130,9 @@ async function assertNewsletterAccess(
   }
 }
 
-export async function runNewsletterTest(triggeredByEmail?: string | null): Promise<NewsletterTestResult> {
+export async function runNewsletterTest(
+  triggeredByEmail?: string | null,
+): Promise<NewsletterTestResult> {
   try {
     const apiKey = getResendApiKey();
     if (!apiKey) {
@@ -230,8 +239,7 @@ export async function respondToNewsletterTestRequest(request: Request): Promise<
 
   let triggeredByEmail: string | null = null;
   try {
-    const SUPABASE_URL =
-      process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim();
+    const SUPABASE_URL = process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim();
     const SUPABASE_PUBLISHABLE_KEY =
       process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ??
       process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();

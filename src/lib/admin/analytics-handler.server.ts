@@ -2,6 +2,13 @@ import { z } from "zod";
 import { getGa4Analytics, getGa4Credentials } from "./ga4.server";
 import type { Ga4AnalyticsData, Ga4DateRange } from "./analytics.types";
 import { GA_NOT_CONFIGURED, GA_SERVER_ERROR } from "./analytics-errors";
+import {
+  readSupabaseAnonKey,
+  readSupabaseUrl,
+  validateGa4Env,
+  validateSupabasePublicEnv,
+  validateSupabaseServiceEnv,
+} from "@/lib/env.server";
 
 const rangeSchema = z.object({
   range: z.enum(["today", "7d", "30d", "12m"]),
@@ -24,8 +31,15 @@ function unhandledAnalyticsResponse(error: unknown): AdminAnalyticsResponse {
   };
 }
 
-async function assertAnalyticsAccess(userId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+async function assertAnalyticsAccess(
+  userId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
+    const serviceEnv = validateSupabaseServiceEnv();
+    if (!serviceEnv.ok) {
+      return { ok: false, error: serviceEnv.message };
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: adminRow }, { data: roleRows }] = await Promise.all([
@@ -40,9 +54,6 @@ async function assertAnalyticsAccess(userId: string): Promise<{ ok: true } | { o
     return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    if (message.includes("Missing Supabase")) {
-      return { ok: false, error: "Supabase server configuration is missing." };
-    }
     console.error("[ga4] unhandled error", err);
     return { ok: false, error: message || "Could not verify admin access." };
   }
@@ -52,14 +63,15 @@ async function getAuthenticatedUserId(
   request: Request,
 ): Promise<{ ok: true; userId: string } | { ok: false; error: string }> {
   try {
-    const SUPABASE_URL =
-      process.env.SUPABASE_URL?.trim() ?? process.env.VITE_SUPABASE_URL?.trim();
-    const SUPABASE_PUBLISHABLE_KEY =
-      process.env.SUPABASE_PUBLISHABLE_KEY?.trim() ??
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+    const publicEnv = validateSupabasePublicEnv();
+    if (!publicEnv.ok) {
+      return { ok: false, error: publicEnv.message };
+    }
 
+    const SUPABASE_URL = readSupabaseUrl();
+    const SUPABASE_PUBLISHABLE_KEY = readSupabaseAnonKey();
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-      return { ok: false, error: "Supabase server configuration is missing." };
+      return { ok: false, error: publicEnv.message };
     }
 
     const authHeader = request.headers.get("authorization");
@@ -97,9 +109,19 @@ export async function runAdminAnalyticsRequest(
   try {
     console.info("[ga4] Analytics request, range:", range);
 
+    const ga4Env = validateGa4Env();
+    if (!ga4Env.ok) {
+      console.warn("[ga4] Analytics blocked —", ga4Env.message);
+      return { ok: false, error: GA_NOT_CONFIGURED, details: ga4Env.message };
+    }
+
     const credentials = getGa4Credentials();
     if ("error" in credentials) {
-      console.warn("[ga4] Analytics blocked — credentials check failed:", credentials.error, credentials.details ?? "");
+      console.warn(
+        "[ga4] Analytics blocked — credentials check failed:",
+        credentials.error,
+        credentials.details ?? "",
+      );
       return { ok: false, error: credentials.error, details: credentials.details };
     }
 

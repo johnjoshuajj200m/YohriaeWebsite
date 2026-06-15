@@ -57,7 +57,12 @@ function AdminSettings() {
   });
 
   if (!permissions.canManageSettings) {
-    return <EmptyState title="Access restricted" description="Only administrators can access settings." />;
+    return (
+      <EmptyState
+        title="Access restricted"
+        description="Only administrators can access settings."
+      />
+    );
   }
 
   return (
@@ -77,38 +82,104 @@ function AdminSettings() {
         <section className="brand-card rounded-xl border border-border bg-background p-6">
           <h2 className="text-lg font-bold">Organization Details</h2>
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
-            <Field label="Organization short name" value={form.name} onChange={(name) => setForm({ ...form, name })} />
-            <Field label="Executive Director" value={form.executiveDirector} onChange={(executiveDirector) => setForm({ ...form, executiveDirector })} />
-            <Field label="Full organization name" value={form.longName} onChange={(longName) => setForm({ ...form, longName })} className="lg:col-span-2" />
-            <Field label="Office location" value={form.location} onChange={(location) => setForm({ ...form, location })} />
-            <Field label="Footer/address text" value={form.address} onChange={(address) => setForm({ ...form, address })} />
-            <Textarea label="Footer information" value={form.footerText} onChange={(footerText) => setForm({ ...form, footerText })} className="lg:col-span-2" />
+            <Field
+              label="Organization short name"
+              value={form.name}
+              onChange={(name) => setForm({ ...form, name })}
+            />
+            <Field
+              label="Executive Director"
+              value={form.executiveDirector}
+              onChange={(executiveDirector) => setForm({ ...form, executiveDirector })}
+            />
+            <Field
+              label="Full organization name"
+              value={form.longName}
+              onChange={(longName) => setForm({ ...form, longName })}
+              className="lg:col-span-2"
+            />
+            <Field
+              label="Office location"
+              value={form.location}
+              onChange={(location) => setForm({ ...form, location })}
+            />
+            <Field
+              label="Footer/address text"
+              value={form.address}
+              onChange={(address) => setForm({ ...form, address })}
+            />
+            <Textarea
+              label="Footer information"
+              value={form.footerText}
+              onChange={(footerText) => setForm({ ...form, footerText })}
+              className="lg:col-span-2"
+            />
           </div>
         </section>
 
         <section className="brand-card rounded-xl border border-border bg-background p-6">
           <h2 className="text-lg font-bold">Contact Information</h2>
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
-            <Field label="Primary email" value={form.email} onChange={(email) => setForm({ ...form, email })} />
-            <Field label="Secondary email" value={form.secondaryEmail} onChange={(secondaryEmail) => setForm({ ...form, secondaryEmail })} />
-            <Field label="Office phone" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
-            <Field label="WhatsApp" value={form.whatsapp} onChange={(whatsapp) => setForm({ ...form, whatsapp })} />
+            <Field
+              label="Primary email"
+              value={form.email}
+              onChange={(email) => setForm({ ...form, email })}
+            />
+            <Field
+              label="Secondary email"
+              value={form.secondaryEmail}
+              onChange={(secondaryEmail) => setForm({ ...form, secondaryEmail })}
+            />
+            <Field
+              label="Office phone"
+              value={form.phone}
+              onChange={(phone) => setForm({ ...form, phone })}
+            />
+            <Field
+              label="WhatsApp"
+              value={form.whatsapp}
+              onChange={(whatsapp) => setForm({ ...form, whatsapp })}
+            />
           </div>
         </section>
 
         <section className="brand-card rounded-xl border border-border bg-background p-6">
           <h2 className="text-lg font-bold">Social Media Links</h2>
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
-            <Field label="Instagram" value={form.social.instagram} onChange={(instagram) => setForm({ ...form, social: { ...form.social, instagram } })} />
-            <Field label="Facebook" value={form.social.facebook} onChange={(facebook) => setForm({ ...form, social: { ...form.social, facebook } })} />
-            <Field label="X / Twitter" value={form.social.twitter} onChange={(twitter) => setForm({ ...form, social: { ...form.social, twitter } })} />
-            <Field label="LinkedIn" value={form.social.linkedin} onChange={(linkedin) => setForm({ ...form, social: { ...form.social, linkedin } })} />
-            <Field label="TikTok" value={form.social.tiktok} onChange={(tiktok) => setForm({ ...form, social: { ...form.social, tiktok } })} />
+            <Field
+              label="Instagram"
+              value={form.social.instagram}
+              onChange={(instagram) => setForm({ ...form, social: { ...form.social, instagram } })}
+            />
+            <Field
+              label="Facebook"
+              value={form.social.facebook}
+              onChange={(facebook) => setForm({ ...form, social: { ...form.social, facebook } })}
+            />
+            <Field
+              label="X / Twitter"
+              value={form.social.twitter}
+              onChange={(twitter) => setForm({ ...form, social: { ...form.social, twitter } })}
+            />
+            <Field
+              label="LinkedIn"
+              value={form.social.linkedin}
+              onChange={(linkedin) => setForm({ ...form, social: { ...form.social, linkedin } })}
+            />
+            <Field
+              label="TikTok"
+              value={form.social.tiktok}
+              onChange={(tiktok) => setForm({ ...form, social: { ...form.social, tiktok } })}
+            />
           </div>
         </section>
 
         <div className="flex justify-end">
-          <button type="submit" disabled={saveMutation.isPending} className="btn-primary disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={saveMutation.isPending}
+            className="btn-primary disabled:opacity-60"
+          >
             {saveMutation.isPending ? "Saving..." : "Save Settings"}
           </button>
         </div>
@@ -163,4 +234,3 @@ function Textarea({
     </label>
   );
 }
-

@@ -71,23 +71,37 @@ function AdminMessages() {
   });
 
   if (!permissions.canManageMessages) {
-    return <EmptyState title="Access restricted" description="You do not have permission to view contact messages." />;
+    return (
+      <EmptyState
+        title="Access restricted"
+        description="You do not have permission to view contact messages."
+      />
+    );
   }
 
   return (
     <>
-      <AdminPageHeader title="Contact Messages" description="Review and respond to inquiries from the public contact form." />
+      <AdminPageHeader
+        title="Contact Messages"
+        description="Review and respond to inquiries from the public contact form."
+      />
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading messages…</p>
       ) : messages.length === 0 ? (
-        <EmptyState title="No messages yet" description="Contact form submissions will appear here." />
+        <EmptyState
+          title="No messages yet"
+          description="Contact form submissions will appear here."
+        />
       ) : (
         <div className="space-y-4">
           {messages.map((m) => {
             const status = m.status ?? (m.handled ? "read" : "new");
             return (
-              <article key={m.id} className="brand-card rounded-xl border border-border bg-background p-5">
+              <article
+                key={m.id}
+                className="brand-card rounded-xl border border-border bg-background p-5"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold">{m.name}</p>
@@ -99,20 +113,34 @@ function AdminMessages() {
                   </div>
                 </div>
                 {m.subject && <p className="mt-3 text-sm font-semibold">{m.subject}</p>}
-                <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{m.message}</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                  {m.message}
+                </p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {status === "new" && (
-                    <button type="button" onClick={() => updateMutation.mutate({ id: m.id, status: "read" })} className="btn-outline px-3 py-1.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => updateMutation.mutate({ id: m.id, status: "read" })}
+                      className="btn-outline px-3 py-1.5 text-xs"
+                    >
                       Mark as read
                     </button>
                   )}
                   {status !== "replied" && (
-                    <button type="button" onClick={() => updateMutation.mutate({ id: m.id, status: "replied" })} className="btn-outline px-3 py-1.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => updateMutation.mutate({ id: m.id, status: "replied" })}
+                      className="btn-outline px-3 py-1.5 text-xs"
+                    >
                       Mark as replied
                     </button>
                   )}
                   {permissions.canDeleteMessages && (
-                    <button type="button" onClick={() => setDeleteId(m.id)} className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10">
+                    <button
+                      type="button"
+                      onClick={() => setDeleteId(m.id)}
+                      className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10"
+                    >
                       <Trash2 className="h-3.5 w-3.5" /> Delete
                     </button>
                   )}
@@ -123,8 +151,13 @@ function AdminMessages() {
         </div>
       )}
 
-      <ConfirmDialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)} title="Delete message?" description="This contact message will be permanently removed." onConfirm={() => deleteId && deleteMutation.mutate(deleteId)} />
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(v) => !v && setDeleteId(null)}
+        title="Delete message?"
+        description="This contact message will be permanently removed."
+        onConfirm={() => deleteId && deleteMutation.mutate(deleteId)}
+      />
     </>
   );
 }
-

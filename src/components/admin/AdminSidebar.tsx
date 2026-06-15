@@ -17,12 +17,27 @@ import { roleLabel } from "@/lib/admin/permissions";
 
 const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, perm: "canViewDashboard" as const },
-  { to: "/admin/analytics", label: "Analytics", icon: BarChart3, perm: "canViewAnalytics" as const },
+  {
+    to: "/admin/analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    perm: "canViewAnalytics" as const,
+  },
   { to: "/admin/blog", label: "Blog Posts", icon: FileText, perm: "canViewBlog" as const },
   { to: "/admin/events", label: "Events", icon: Calendar, perm: "canViewEvents" as const },
   { to: "/admin/gallery", label: "Gallery", icon: ImageIcon, perm: "canViewBlog" as const },
-  { to: "/admin/messages", label: "Contact Messages", icon: Mail, perm: "canManageMessages" as const },
-  { to: "/admin/newsletter", label: "Newsletter", icon: Users, perm: "canManageNewsletter" as const },
+  {
+    to: "/admin/messages",
+    label: "Contact Messages",
+    icon: Mail,
+    perm: "canManageMessages" as const,
+  },
+  {
+    to: "/admin/newsletter",
+    label: "Newsletter",
+    icon: Users,
+    perm: "canManageNewsletter" as const,
+  },
   { to: "/admin/users", label: "Admin Users", icon: UserCog, perm: "canManageUsers" as const },
   { to: "/admin/settings", label: "Settings", icon: Settings, perm: "canManageSettings" as const },
 ];

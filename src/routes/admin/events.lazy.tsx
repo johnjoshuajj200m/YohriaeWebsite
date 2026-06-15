@@ -51,7 +51,11 @@ function AdminEvents() {
   const [form, setForm] = useState<EventForm>(emptyForm());
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { data: events = [], isLoading, error } = useQuery({
+  const {
+    data: events = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["admin-events"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -101,10 +105,7 @@ function AdminEvents() {
 
   const publishToggleMutation = useMutation({
     mutationFn: async ({ id, publish }: { id: string; publish: boolean }) => {
-      const { error } = await supabase
-        .from("events")
-        .update({ published: publish })
-        .eq("id", id);
+      const { error } = await supabase.from("events").update({ published: publish }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
@@ -157,7 +158,12 @@ function AdminEvents() {
   }
 
   if (!permissions.canViewEvents) {
-    return <EmptyState title="Access restricted" description="You do not have permission to view events." />;
+    return (
+      <EmptyState
+        title="Access restricted"
+        description="You do not have permission to view events."
+      />
+    );
   }
 
   return (
@@ -528,4 +534,3 @@ function Field({
     </label>
   );
 }
-

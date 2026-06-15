@@ -1,4 +1,8 @@
-import { jsonErrorResponse, jsonGa4UnhandledError, jsonResponse } from "@/lib/api/json-response.server";
+import {
+  jsonErrorResponse,
+  jsonGa4UnhandledError,
+  jsonResponse,
+} from "@/lib/api/json-response.server";
 
 export const SERVER_API_VERSION = "ga4-newsletter-diag-1";
 

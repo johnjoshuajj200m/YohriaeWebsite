@@ -14,5 +14,5 @@ export const Route = createFileRoute("/events")({
         "See upcoming and past YOHRIAE events: youth dialogues, health trainings, advocacy convenings, and community outreach across Northern Nigeria.",
       path: "/events",
       jsonLd: buildEventsPageSchema(loaderData?.eventsForSchema ?? []),
-    })
+    }),
 });

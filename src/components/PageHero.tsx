@@ -33,10 +33,7 @@ export function PageHero({
               <span>{eyebrow}</span>
             </p>
           )}
-          <h1
-            id="page-hero-title"
-            className="mt-3 text-foreground"
-          >
+          <h1 id="page-hero-title" className="mt-3 text-foreground">
             {title}
           </h1>
           {description && (

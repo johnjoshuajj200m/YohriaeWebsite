@@ -54,8 +54,8 @@ function Partner() {
               ))}
             </div>
             <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-              {SITE.name} welcomes partnerships that combine local trust with evidence, documentation,
-              and partner-ready reporting.
+              {SITE.name} welcomes partnerships that combine local trust with evidence,
+              documentation, and partner-ready reporting.
             </p>
           </div>
 
@@ -106,4 +106,3 @@ function Partner() {
     </>
   );
 }
-

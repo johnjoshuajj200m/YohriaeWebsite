@@ -36,7 +36,10 @@ type NewsletterTestResponse =
   | { ok: true; sentAt: string; from: string; recipients: NewsletterTestRecipient[] }
   | { ok: false; error: string; details?: string; recipients?: NewsletterTestRecipient[] };
 
-async function postJson<T>(url: string, body?: unknown): Promise<{ status: number; data: T | null }> {
+async function postJson<T>(
+  url: string,
+  body?: unknown,
+): Promise<{ status: number; data: T | null }> {
   const { data: sessionData } = await supabase.auth.getSession();
   const token = sessionData.session?.access_token;
   const res = await fetch(url, {
@@ -97,7 +100,7 @@ function AdminNewsletter() {
     statusResponse?.data?.ok && statusResponse.data.status ? statusResponse.data.status : null;
   const statusError =
     statusResponse?.data && !statusResponse.data.ok
-      ? statusResponse.data.error ?? "Could not load newsletter status."
+      ? (statusResponse.data.error ?? "Could not load newsletter status.")
       : statusResponse && statusResponse.data === null
         ? "Newsletter status endpoint did not return JSON."
         : null;
@@ -156,7 +159,12 @@ function AdminNewsletter() {
   }
 
   if (!permissions.canManageNewsletter) {
-    return <EmptyState title="Access restricted" description="You do not have permission to manage newsletter subscribers." />;
+    return (
+      <EmptyState
+        title="Access restricted"
+        description="You do not have permission to manage newsletter subscribers."
+      />
+    );
   }
 
   return (
@@ -166,7 +174,11 @@ function AdminNewsletter() {
         description="View community subscribers and verify admin email notifications."
         action={
           subscribers.length > 0 ? (
-            <button type="button" onClick={exportCsv} className="btn-outline inline-flex items-center gap-2">
+            <button
+              type="button"
+              onClick={exportCsv}
+              className="btn-outline inline-flex items-center gap-2"
+            >
               <Download className="h-4 w-4" /> Export CSV
             </button>
           ) : undefined
@@ -204,7 +216,7 @@ function AdminNewsletter() {
             loading={statusLoading}
             ok={status?.configured ?? false}
             title="Configuration status"
-            value={status ? status.message : statusError ?? "Loading…"}
+            value={status ? status.message : (statusError ?? "Loading…")}
             details={
               status ? (
                 <ul className="mt-2 list-inside list-disc space-y-1">
@@ -260,15 +272,18 @@ function AdminNewsletter() {
         <p className="mt-3 text-xs text-muted-foreground">
           Required Vercel server env vars: <code className="text-[11px]">RESEND_API_KEY</code>,{" "}
           <code className="text-[11px]">NEWSLETTER_FROM_EMAIL</code>,{" "}
-          <code className="text-[11px]">ADMIN_NOTIFICATION_EMAILS</code> (optional, defaults provided).
-          Subscriptions still save without email configured.
+          <code className="text-[11px]">ADMIN_NOTIFICATION_EMAILS</code> (optional, defaults
+          provided). Subscriptions still save without email configured.
         </p>
       </section>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading subscribers…</p>
       ) : subscribers.length === 0 ? (
-        <EmptyState title="No subscribers yet" description="Newsletter signups from the public site will appear here." />
+        <EmptyState
+          title="No subscribers yet"
+          description="Newsletter signups from the public site will appear here."
+        />
       ) : (
         <>
           <div className="space-y-2 md:hidden">
@@ -308,7 +323,11 @@ function AdminNewsletter() {
                     <td className="px-4 py-3 text-muted-foreground">{formatDate(s.created_at)}</td>
                     <td className="px-4 py-3 text-right">
                       {permissions.canDeleteNewsletter && (
-                        <button type="button" onClick={() => setDeleteId(s.id)} className="rounded-md p-2 text-destructive hover:bg-destructive/10">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteId(s.id)}
+                          className="rounded-md p-2 text-destructive hover:bg-destructive/10"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       )}
@@ -321,7 +340,13 @@ function AdminNewsletter() {
         </>
       )}
 
-      <ConfirmDialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)} title="Remove subscriber?" description="This email will be removed from the newsletter list." onConfirm={() => deleteId && deleteMutation.mutate(deleteId)} />
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(v) => !v && setDeleteId(null)}
+        title="Remove subscriber?"
+        description="This email will be removed from the newsletter list."
+        onConfirm={() => deleteId && deleteMutation.mutate(deleteId)}
+      />
     </>
   );
 }
@@ -374,4 +399,3 @@ function EnvFlag({ label, ok, extra }: { label: string; ok: boolean; extra?: str
     </li>
   );
 }
-

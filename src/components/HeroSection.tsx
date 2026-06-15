@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { CountUpStat } from "@/components/CountUpStat";
 import { HERO_LCP } from "@/lib/lcp-images";
 import { HERO_STATS, SITE } from "@/lib/site-config";
-import { analyticsEvents } from "@/lib/analytics";
+import { trackPartnerClick } from "@/lib/analytics-clicks";
 
 const STAT_ACCENTS = ["#C2188F", "#00A7C8", "#F5A623"] as const;
 
@@ -16,7 +15,8 @@ export function HeroSection() {
       >
         <div className="absolute inset-0">
           <picture>
-            <source srcSet={HERO_LCP.srcSet} sizes={HERO_LCP.sizes} type="image/webp" />
+            <source srcSet={HERO_LCP.avifSrcSet} sizes={HERO_LCP.sizes} type="image/avif" />
+            <source srcSet={HERO_LCP.webpSrcSet} sizes={HERO_LCP.sizes} type="image/webp" />
             <img
               src={HERO_LCP.jpgSrc}
               alt="Advancing Youth Health, Rights, and Community Empowerment"
@@ -57,7 +57,7 @@ export function HeroSection() {
               </Link>
               <Link
                 to="/partner"
-                onClick={() => analyticsEvents.partnerClick("home_hero")}
+                onClick={() => trackPartnerClick("home_hero")}
                 className="btn-ghost-light justify-center sm:justify-start"
               >
                 Partner With Us
@@ -67,7 +67,10 @@ export function HeroSection() {
         </div>
       </section>
 
-      <section className="defer-paint border-b border-border bg-background" aria-label="Impact highlights">
+      <section
+        className="defer-paint border-b border-border bg-background"
+        aria-label="Impact highlights"
+      >
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
             {HERO_STATS.map((s, i) => (
@@ -80,7 +83,7 @@ export function HeroSection() {
                   {s.label}
                 </dt>
                 <dd className="order-1 text-3xl font-bold tracking-tight text-primary sm:order-none sm:text-[2.25rem]">
-                  <CountUpStat value={s.value} />
+                  {s.value}
                 </dd>
               </div>
             ))}
