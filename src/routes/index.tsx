@@ -23,15 +23,32 @@ import {
 import { analyticsEvents } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPageHead } from "@/lib/seo";
+import { buildHomePageSchema } from "@/lib/schema";
+import { HERO_LCP } from "@/lib/lcp-images";
 
 export const Route = createFileRoute("/")({
-  head: () =>
-    buildPageHead({
-      title:
-        "YOHRIAE — Youth Health, Human Rights & Empowerment in Northern Nigeria",
+  head: () => {
+    const pageHead = buildPageHead({
+      title: "YOHRIAE — Youth Health, Rights & Empowerment",
       description: SITE.description,
       path: "/",
-    }),
+      jsonLd: buildHomePageSchema(),
+    });
+    return {
+      ...pageHead,
+      links: [
+        {
+          rel: "preload",
+          as: "image",
+          href: HERO_LCP.preloadHref,
+          imageSrcSet: HERO_LCP.srcSet,
+          imageSizes: HERO_LCP.sizes,
+          fetchPriority: "high",
+        },
+        ...pageHead.links,
+      ],
+    };
+  },
   component: Home,
 });
 
@@ -145,7 +162,7 @@ function Home() {
       </section>
 
       {/* About preview */}
-      <section className="section-padding mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="defer-paint section-padding mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <div className="order-2 lg:order-1">
             <SectionHeader
@@ -187,7 +204,7 @@ function Home() {
       </section>
 
       {/* Programs preview */}
-      <section className="border-t border-border bg-surface section-padding">
+      <section className="defer-paint border-t border-border bg-surface section-padding">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             eyebrow="Our Programs"
@@ -229,7 +246,10 @@ function Home() {
                 <img
                   src={p.image}
                   alt={p.title}
+                  width={1280}
+                  height={800}
                   loading="lazy"
+                  decoding="async"
                   className="aspect-[16/10] w-full object-cover lg:aspect-auto lg:min-h-[280px]"
                 />
                 <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
@@ -270,7 +290,7 @@ function Home() {
       </section>
 
       {/* Events & Blog */}
-      <section className="section-padding mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="defer-paint section-padding mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-14">
           <div>
             <SectionHeader
@@ -345,7 +365,9 @@ function Home() {
                         {p.featured_image_url ? (
                           <img
                             src={p.featured_image_url}
-                            alt=""
+                            alt={`Cover image for ${p.title}`}
+                            width={120}
+                            height={68}
                             loading="lazy"
                             className="aspect-video h-full w-full object-cover sm:aspect-auto"
                           />
@@ -385,7 +407,7 @@ function Home() {
       </section>
 
       {/* Testimonials */}
-      <section className="border-y border-border bg-surface section-padding">
+      <section className="defer-paint border-y border-border bg-surface section-padding">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             eyebrow="Voices From the Field"
@@ -409,7 +431,7 @@ function Home() {
       </section>
 
       {/* Gallery preview */}
-      <section className="section-padding mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="defer-paint section-padding mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeader
             eyebrow="Gallery"
@@ -426,7 +448,10 @@ function Home() {
               key={i}
               src={src}
               alt="YOHRIAE program activity"
+              width={1280}
+              height={960}
               loading="lazy"
+              decoding="async"
               className="aspect-[4/3] w-full rounded-sm object-cover shadow-soft"
             />
           ))}

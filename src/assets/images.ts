@@ -1,25 +1,27 @@
-import logo from "./YOHRIAE LOGO.png";
+// Vite imagetools query imports are resolved at build time; TS cannot type the `?w=` suffix.
+// @ts-nocheck
+import logo from "./YOHRIAE LOGO.png?w=480&format=webp&quality=90";
 
-import teamGroup from "./PHOTO-2026-06-13-18-17-48.jpg";
-import workshopPlanning from "./PHOTO-2026-06-13-18-17-48 (1).jpg";
-import teamOutdoor from "./PHOTO-2026-06-13-18-17-48 (2).jpg";
+import teamGroup from "./PHOTO-2026-06-13-18-17-48.jpg?w=1280&format=webp&quality=78";
+import workshopPlanning from "./PHOTO-2026-06-13-18-17-48 (1).jpg?w=1280&format=webp&quality=78";
+import teamOutdoor from "./PHOTO-2026-06-13-18-17-48 (2).jpg?w=1280&format=webp&quality=78";
 
-import workshopSession from "./PHOTO-2026-06-13-18-17-49.jpg";
-import paralegalTraining from "./PHOTO-2026-06-13-18-17-49 (1).jpg";
-import hivAwareness from "./PHOTO-2026-06-13-18-17-49 (2).jpg";
-import womensDay from "./PHOTO-2026-06-13-18-17-49 (3).jpg";
-import youthAcademy from "./PHOTO-2026-06-13-18-17-49 (4).jpg";
-import capacityWorkshop from "./PHOTO-2026-06-13-18-17-49 (5).jpg";
-import leadershipWorkshop from "./PHOTO-2026-06-13-18-17-49 (6).jpg";
-import iwdAdvocacy from "./PHOTO-2026-06-13-18-17-49 (7).jpg";
-import advocacyMap from "./PHOTO-2026-06-13-18-17-49 (8).jpg";
-import regionalLeadership from "./PHOTO-2026-06-13-18-17-49 (9).jpg";
-import partnerVisit from "./PHOTO-2026-06-13-18-17-49 (10).jpg";
-import safetyTraining from "./PHOTO-2026-06-13-18-17-49 (11).jpg";
-import mentalHealth from "./PHOTO-2026-06-13-18-17-49 (12).jpg";
-import orgGroup from "./PHOTO-2026-06-13-18-17-49 (13).jpg";
-import mentalHealthTraining from "./PHOTO-2026-06-13-18-17-49 (14).jpg";
-import academyTeam from "./PHOTO-2026-06-13-18-17-49 (15).jpg";
+import workshopSession from "./PHOTO-2026-06-13-18-17-49.jpg?w=1280&format=webp&quality=78";
+import paralegalTraining from "./PHOTO-2026-06-13-18-17-49 (1).jpg?w=1280&format=webp&quality=78";
+import hivAwareness from "./PHOTO-2026-06-13-18-17-49 (2).jpg?w=1280&format=webp&quality=78";
+import womensDay from "./PHOTO-2026-06-13-18-17-49 (3).jpg?w=1280&format=webp&quality=78";
+import youthAcademy from "./PHOTO-2026-06-13-18-17-49 (4).jpg?w=1280&format=webp&quality=78";
+import capacityWorkshop from "./PHOTO-2026-06-13-18-17-49 (5).jpg?w=1280&format=webp&quality=78";
+import leadershipWorkshop from "./PHOTO-2026-06-13-18-17-49 (6).jpg?w=1280&format=webp&quality=78";
+import iwdAdvocacy from "./PHOTO-2026-06-13-18-17-49 (7).jpg?w=1280&format=webp&quality=78";
+import advocacyMap from "./PHOTO-2026-06-13-18-17-49 (8).jpg?w=1280&format=webp&quality=78";
+import regionalLeadership from "./PHOTO-2026-06-13-18-17-49 (9).jpg?w=1280&format=webp&quality=78";
+import partnerVisit from "./PHOTO-2026-06-13-18-17-49 (10).jpg?w=1280&format=webp&quality=78";
+import safetyTraining from "./PHOTO-2026-06-13-18-17-49 (11).jpg?w=1280&format=webp&quality=78";
+import mentalHealth from "./PHOTO-2026-06-13-18-17-49 (12).jpg?w=1280&format=webp&quality=78";
+import orgGroup from "./PHOTO-2026-06-13-18-17-49 (13).jpg?w=1280&format=webp&quality=78";
+import mentalHealthTraining from "./PHOTO-2026-06-13-18-17-49 (14).jpg?w=1280&format=webp&quality=78";
+import academyTeam from "./PHOTO-2026-06-13-18-17-49 (15).jpg?w=1280&format=webp&quality=78";
 
 export { logo };
 

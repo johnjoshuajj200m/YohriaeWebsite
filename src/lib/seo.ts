@@ -4,8 +4,7 @@
  */
 
 export const SITE_URL = "https://www.yohriae.com";
-export const DEFAULT_OG_IMAGE =
-  "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/455a4834-473e-498a-96ee-f27782a83a37/id-preview-7228dcee--bc2d6ffa-72f5-4f13-b479-e0b873f18d0e.lovable.app-1781368796558.png";
+export const DEFAULT_OG_IMAGE = "https://www.yohriae.com/images/hero-1280.webp";
 export const TWITTER_HANDLE = "@yohriae";
 
 export type PageMetaInput = {
@@ -23,6 +22,8 @@ export type PageMetaInput = {
   noindex?: boolean;
   /** Extra meta tag objects to append. */
   extraMeta?: Array<Record<string, string>>;
+  /** JSON-LD structured data graph for this page. */
+  jsonLd?: Record<string, unknown>;
 };
 
 export type MetaTag = Record<string, string>;
@@ -37,6 +38,7 @@ export type LinkTag = Record<string, string>;
 export function buildPageHead(input: PageMetaInput): {
   meta: MetaTag[];
   links: LinkTag[];
+  scripts: Array<{ type: string; children: string }>;
 } {
   const url = `${SITE_URL}${input.path.startsWith("/") ? input.path : `/${input.path}`}`;
   const image = input.image ?? DEFAULT_OG_IMAGE;
@@ -70,8 +72,16 @@ export function buildPageHead(input: PageMetaInput): {
   }
 
   const links: LinkTag[] = [{ rel: "canonical", href: url }];
+  const scripts: Array<{ type: string; children: string }> = [];
 
-  return { meta, links };
+  if (input.jsonLd) {
+    scripts.push({
+      type: "application/ld+json",
+      children: JSON.stringify(input.jsonLd),
+    });
+  }
+
+  return { meta, links, scripts };
 }
 
 /** Routes included in the public sitemap. Update when adding a new public page. */

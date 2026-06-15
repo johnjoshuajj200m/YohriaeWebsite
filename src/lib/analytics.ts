@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-export function initializeAnalytics() {
+export function ensureAnalyticsStub() {
   if (!isProduction || !GA_MEASUREMENT_ID || typeof window === "undefined") return;
   if (window.gtag) return;
 
@@ -18,18 +18,32 @@ export function initializeAnalytics() {
   window.gtag = function gtag() {
     window.dataLayer?.push(arguments);
   };
+}
+
+export function loadAnalyticsScript() {
+  if (!isProduction || !GA_MEASUREMENT_ID || typeof window === "undefined") return;
+  if (document.querySelector(`script[src*="googletagmanager.com/gtag/js"]`)) return;
 
   const script = document.createElement("script");
-  script.async = true;
+  script.defer = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  script.onload = () => {
+    window.gtag?.("js", new Date());
+    window.gtag?.("config", GA_MEASUREMENT_ID, { send_page_view: false });
+  };
   document.head.appendChild(script);
+}
 
-  window.gtag("js", new Date());
-  window.gtag("config", GA_MEASUREMENT_ID, { send_page_view: false });
+export function initializeAnalytics() {
+  ensureAnalyticsStub();
+  loadAnalyticsScript();
 }
 
 export function trackPageView(path: string, title?: string) {
-  if (!isProduction || !GA_MEASUREMENT_ID || typeof window === "undefined" || !window.gtag) return;
+  if (!isProduction || !GA_MEASUREMENT_ID || typeof window === "undefined") return;
+
+  ensureAnalyticsStub();
+  if (!window.gtag) return;
 
   const resolvedTitle =
     title ?? (typeof document !== "undefined" ? document.title : undefined);

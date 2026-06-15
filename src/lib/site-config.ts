@@ -143,3 +143,12 @@ export const CORE_VALUES = [
   "Evidence-Based Action",
   "Collaboration",
 ] as const;
+
+export const VOLUNTEER_OPPORTUNITIES = [
+  { name: "Community outreach support" },
+  { name: "Youth education sessions" },
+  { name: "Digital communications" },
+  { name: "Program documentation" },
+  { name: "Event coordination" },
+  { name: "Peer advocacy" },
+] as const;

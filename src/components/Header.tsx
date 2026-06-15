@@ -16,6 +16,15 @@ export function Header() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  useEffect(() => {
     if (typeof document === "undefined") return;
     if (open) {
       const previous = document.body.style.overflow;
@@ -137,8 +146,6 @@ export function Header() {
                     onClick={() => setOpen(false)}
                     style={open ? { animationDelay: `${40 + idx * 30}ms` } : undefined}
                     className={`group flex items-center justify-between border-b border-border/70 py-4 text-[1.0625rem] font-medium tracking-tight transition-colors ${
-                      open ? "anim-fade-up-fast" : ""
-                    } ${
                       active
                         ? "text-primary"
                         : "text-foreground hover:text-primary"

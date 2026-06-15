@@ -90,7 +90,7 @@ export function ImageUpload({
           {value ? (
             <img
               src={value}
-              alt=""
+              alt={label ? `${label} preview` : "Uploaded image preview"}
               className="h-full w-full object-cover"
               loading="lazy"
             />

@@ -1,0 +1,39 @@
+type ClientErrorOptions = {
+  mechanism?: "manual" | "onerror" | "unhandledrejection" | "react_error_boundary";
+  handled?: boolean;
+  severity?: "error" | "warning" | "info";
+};
+
+type ClientErrorReporter = {
+  captureException?: (
+    error: unknown,
+    context?: Record<string, unknown>,
+    options?: ClientErrorOptions,
+  ) => void;
+};
+
+declare global {
+  interface Window {
+    __clientErrorReporter?: ClientErrorReporter;
+    /** @deprecated Legacy hook — use __clientErrorReporter */
+    __lovableEvents?: ClientErrorReporter;
+  }
+}
+
+export function reportClientError(error: unknown, context: Record<string, unknown> = {}) {
+  if (typeof window === "undefined") return;
+  const reporter = window.__clientErrorReporter ?? window.__lovableEvents;
+  reporter?.captureException?.(
+    error,
+    {
+      source: "react_error_boundary",
+      route: window.location.pathname,
+      ...context,
+    },
+    {
+      mechanism: "react_error_boundary",
+      handled: false,
+      severity: "error",
+    },
+  );
+}

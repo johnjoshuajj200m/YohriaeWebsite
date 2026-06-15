@@ -11,12 +11,12 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { reportClientError } from "../lib/error-reporting";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { initializeAnalytics, trackPageView } from "@/lib/analytics";
+import { ensureAnalyticsStub, loadAnalyticsScript, trackPageView } from "@/lib/analytics";
 import { DEFAULT_OG_IMAGE, SITE_URL, TWITTER_HANDLE } from "@/lib/seo";
-import { SITE } from "@/lib/site-config";
+import { buildRootSchemaGraph, jsonLdScript } from "@/lib/schema";
 
 function NotFoundComponent() {
   return (
@@ -51,7 +51,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
   useEffect(() => {
     try {
-      reportLovableError(error, { boundary: "tanstack_root_error_component" });
+      reportClientError(error, { boundary: "tanstack_root_error_component" });
     } catch {
       // Never let the error reporter itself throw inside the error boundary.
     }
@@ -131,62 +131,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap",
-      },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "manifest", href: "/site.webmanifest" },
     ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@graph": [
-            {
-              "@type": "NGO",
-              "@id": `${SITE_URL}/#organization`,
-              name: SITE.name,
-              alternateName: SITE.longName,
-              url: SITE_URL,
-              logo: `${SITE_URL}/favicon.svg`,
-              image: DEFAULT_OG_IMAGE,
-              description:
-                "YOHRIAE empowers young people and vulnerable communities through health, human rights, advocacy and sustainable development.",
-              foundingDate: SITE.founded,
-              founder: { "@type": "Person", name: SITE.executiveDirector },
-              areaServed: { "@type": "AdministrativeArea", name: "Northern Nigeria" },
-              email: SITE.email,
-              telephone: SITE.phone,
-              address: {
-                "@type": "PostalAddress",
-                addressRegion: "Northern Nigeria",
-                addressCountry: "NG",
-              },
-              sameAs: [
-                SITE.social.twitter,
-                SITE.social.facebook,
-                SITE.social.instagram,
-                SITE.social.linkedin,
-                SITE.social.tiktok,
-              ],
-            },
-            {
-              "@type": "WebSite",
-              "@id": `${SITE_URL}/#website`,
-              url: SITE_URL,
-              name: SITE.name,
-              description: ROOT_DESCRIPTION,
-              publisher: { "@id": `${SITE_URL}/#organization` },
-              inLanguage: "en-US",
-            },
-          ],
-        }),
-      },
-    ],
+    scripts: [jsonLdScript(buildRootSchemaGraph())],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -214,16 +162,34 @@ function RootComponent() {
   const location = useLocation();
 
   useEffect(() => {
+    const path = location.pathname;
+    if (!path.startsWith("/admin") && !path.startsWith("/auth")) return;
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
     return () => sub.subscription.unsubscribe();
-  }, [router, queryClient]);
+  }, [router, queryClient, location.pathname]);
 
   useEffect(() => {
-    initializeAnalytics();
+    ensureAnalyticsStub();
+
+    const run = () => loadAnalyticsScript();
+    let idleId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(run, { timeout: 4000 });
+    } else {
+      timeoutId = setTimeout(run, 2500);
+    }
+
+    return () => {
+      if (idleId != null) window.cancelIdleCallback(idleId);
+      if (timeoutId != null) clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => {
