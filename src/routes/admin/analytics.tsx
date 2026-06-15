@@ -26,20 +26,10 @@ import {
   ga4RangeLabel,
   type Ga4DateRange,
 } from "@/lib/admin/analytics.types";
-import { GA_NOT_CONNECTED } from "@/lib/admin/analytics-errors";
+import { getAnalyticsErrorDisplay } from "@/lib/admin/analytics-errors";
 
 function analyticsErrorDisplay(error: Error) {
-  if (error.message === GA_NOT_CONNECTED) {
-    return {
-      title: GA_NOT_CONNECTED,
-      message:
-        "Add GA4_PROPERTY_ID and GA4_SERVICE_ACCOUNT_JSON to your server environment (Vercel), then redeploy.",
-    };
-  }
-  return {
-    title: "Could not load Google Analytics",
-    message: error.message,
-  };
+  return getAnalyticsErrorDisplay(error);
 }
 
 export const Route = createFileRoute("/admin/analytics")({
@@ -56,7 +46,7 @@ function AdminAnalytics() {
     <>
       <AdminPageHeader
         title="Website Analytics"
-        description="Live Google Analytics 4 data for visitors, acquisition, content performance, devices, and countries."
+        description="Google Analytics 4 reporting for visitors, acquisition, content performance, devices, and countries."
         action={
           <div className="flex flex-wrap items-center gap-2">
             {GA4_DATE_RANGE_OPTIONS.map((option) => (
@@ -101,17 +91,22 @@ function AdminAnalytics() {
             />
           );
         })()
-      ) : data ? (
+      ) : data?.source === "ga4" ? (
         <>
-          <p className="mb-4 text-xs text-muted-foreground">
-            Showing {ga4RangeLabel(range)} · Last updated{" "}
-            {new Date(data.fetchedAt).toLocaleString()} · Auto-refreshes every 60 seconds
-          </p>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center rounded-full border border-[var(--brand-cyan)]/30 bg-[color-mix(in_srgb,var(--brand-cyan)_12%,white)] px-3 py-1 text-xs font-semibold text-[var(--brand-cyan)]">
+              Real Google Analytics data
+            </span>
+            <p className="text-xs text-muted-foreground">
+              Showing {ga4RangeLabel(range)} · Property {data.propertyId} · Last updated{" "}
+              {new Date(data.fetchedAt).toLocaleString()} · Auto-refreshes every 60 seconds
+            </p>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <AdminStatCard label="Total users" value={data.totalUsers.toLocaleString()} accent="primary" />
             <AdminStatCard label="Active users" value={data.activeUsers.toLocaleString()} accent="magenta" />
-            <AdminStatCard label="Users today" value={data.usersToday.toLocaleString()} accent="cyan" />
+            <AdminStatCard label="New users" value={data.newUsers.toLocaleString()} accent="cyan" />
             <AdminStatCard label="Page views" value={data.pageViews.toLocaleString()} accent="gold" />
             <AdminStatCard label="Sessions" value={data.sessions.toLocaleString()} accent="cyan" />
           </div>
@@ -230,37 +225,45 @@ function AdminAnalytics() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Device category
                   </p>
-                  <div className="mt-2 space-y-2">
-                    {data.devices.map((d) => (
-                      <div key={d.label}>
-                        <div className="flex justify-between text-sm">
-                          <span>{d.label}</span>
-                          <span className="text-muted-foreground">{d.share}%</span>
+                  {data.devices.length === 0 ? (
+                    <p className="mt-2 text-sm text-muted-foreground">No device data for this period.</p>
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      {data.devices.map((d) => (
+                        <div key={d.label}>
+                          <div className="flex justify-between text-sm">
+                            <span>{d.label}</span>
+                            <span className="text-muted-foreground">{d.share}%</span>
+                          </div>
+                          <div className="mt-1 h-2 rounded-full bg-surface">
+                            <div
+                              className="h-2 rounded-full bg-[var(--brand-magenta)]"
+                              style={{ width: `${d.share}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="mt-1 h-2 rounded-full bg-surface">
-                          <div
-                            className="h-2 rounded-full bg-[var(--brand-magenta)]"
-                            style={{ width: `${d.share}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Top countries
                   </p>
-                  <div className="mt-2 space-y-2">
-                    {data.countries.map((c) => (
-                      <div key={c.label} className="flex justify-between text-sm">
-                        <span>{c.label}</span>
-                        <span className="text-muted-foreground">
-                          {c.users.toLocaleString()} ({c.share}%)
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {data.countries.length === 0 ? (
+                    <p className="mt-2 text-sm text-muted-foreground">No country data for this period.</p>
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      {data.countries.map((c) => (
+                        <div key={c.label} className="flex justify-between text-sm">
+                          <span>{c.label}</span>
+                          <span className="text-muted-foreground">
+                            {c.users.toLocaleString()} ({c.share}%)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </section>

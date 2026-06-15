@@ -20,13 +20,14 @@ export type Ga4PageItem = {
 };
 
 export type Ga4AnalyticsData = {
+  source: "ga4";
   range: Ga4DateRange;
+  propertyId: string;
   totalUsers: number;
   activeUsers: number;
   newUsers: number;
   pageViews: number;
   sessions: number;
-  usersToday: number;
   timeSeries: Ga4TimePoint[];
   topPages: Ga4PageItem[];
   trafficSources: Ga4BreakdownItem[];

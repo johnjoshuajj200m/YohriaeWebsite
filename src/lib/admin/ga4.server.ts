@@ -1,37 +1,75 @@
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import type { Ga4AnalyticsData, Ga4BreakdownItem, Ga4DateRange, Ga4PageItem } from "./analytics.types";
-import { GA_NOT_CONNECTED } from "./analytics-errors";
+import { GA_NOT_CONFIGURED } from "./analytics-errors";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 type CacheEntry = { data: Ga4AnalyticsData; expiresAt: number };
 const cache = new Map<string, CacheEntry>();
 
-let client: BetaAnalyticsDataClient | null = null;
-
-function getGa4Config() {
-  const propertyId = process.env.GA4_PROPERTY_ID?.trim();
-  const credentialsJson = process.env.GA4_SERVICE_ACCOUNT_JSON?.trim();
-
-  if (!propertyId || !credentialsJson) {
-    throw new Error(GA_NOT_CONNECTED);
-  }
-
-  let credentials: Record<string, unknown>;
-  try {
-    credentials = JSON.parse(credentialsJson) as Record<string, unknown>;
-  } catch {
-    throw new Error(GA_NOT_CONNECTED);
-  }
-
-  return { propertyId, credentials };
+function readEnv(name: string) {
+  return process.env[name]?.trim() || undefined;
 }
 
-function getClient(credentials: Record<string, unknown>) {
-  if (!client) {
-    client = new BetaAnalyticsDataClient({ credentials });
+function normalizePrivateKey(key: string) {
+  return key.replace(/\\n/g, "\n");
+}
+
+export function getGa4Credentials():
+  | { propertyId: string; clientEmail: string; privateKey: string }
+  | { error: string } {
+  const propertyId = readEnv("GA4_PROPERTY_ID");
+  const clientEmail = readEnv("GOOGLE_CLIENT_EMAIL");
+  const privateKeyRaw = readEnv("GOOGLE_PRIVATE_KEY");
+
+  if (propertyId && clientEmail && privateKeyRaw) {
+    return {
+      propertyId,
+      clientEmail,
+      privateKey: normalizePrivateKey(privateKeyRaw),
+    };
   }
-  return client;
+
+  // Backward-compatible fallback: single JSON blob (local dev / legacy Vercel setup).
+  const credentialsJson = readEnv("GA4_SERVICE_ACCOUNT_JSON");
+  if (propertyId && credentialsJson) {
+    try {
+      const parsed = JSON.parse(credentialsJson) as {
+        client_email?: string;
+        private_key?: string;
+      };
+      if (parsed.client_email && parsed.private_key) {
+        return {
+          propertyId,
+          clientEmail: parsed.client_email,
+          privateKey: normalizePrivateKey(parsed.private_key),
+        };
+      }
+    } catch {
+      return { error: GA_NOT_CONFIGURED };
+    }
+  }
+
+  const missing = [
+    ...(!propertyId ? ["GA4_PROPERTY_ID"] : []),
+    ...(!clientEmail ? ["GOOGLE_CLIENT_EMAIL"] : []),
+    ...(!privateKeyRaw ? ["GOOGLE_PRIVATE_KEY"] : []),
+  ];
+
+  if (missing.length > 0) {
+    console.warn("[ga4] Missing server env:", missing.join(", "));
+  }
+
+  return { error: GA_NOT_CONFIGURED };
+}
+
+function createGa4Client(clientEmail: string, privateKey: string) {
+  return new BetaAnalyticsDataClient({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+  });
 }
 
 function propertyPath(propertyId: string) {
@@ -91,7 +129,9 @@ async function fetchActiveUsers(client: BetaAnalyticsDataClient, property: strin
       metrics: [{ name: "activeUsers" }],
     });
     return parseMetric(response.rows?.[0], 0);
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn("[ga4] Realtime activeUsers unavailable:", message);
     return 0;
   }
 }
@@ -101,10 +141,9 @@ async function fetchSummary(
   property: string,
   range: Ga4DateRange,
 ) {
-  const dateRanges = [rangeToDates(range)];
   const [response] = await client.runReport({
     property,
-    dateRanges,
+    dateRanges: [rangeToDates(range)],
     metrics: [
       { name: "totalUsers" },
       { name: "newUsers" },
@@ -120,15 +159,6 @@ async function fetchSummary(
     pageViews: parseMetric(row, 2),
     sessions: parseMetric(row, 3),
   };
-}
-
-async function fetchUsersToday(client: BetaAnalyticsDataClient, property: string) {
-  const [response] = await client.runReport({
-    property,
-    dateRanges: [{ startDate: "today", endDate: "today" }],
-    metrics: [{ name: "activeUsers" }],
-  });
-  return parseMetric(response.rows?.[0], 0);
 }
 
 async function fetchTimeSeries(
@@ -213,46 +243,64 @@ export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4Analytics
     return cached.data;
   }
 
-  const { propertyId, credentials } = getGa4Config();
-  const gaClient = getClient(credentials);
+  const config = getGa4Credentials();
+  if ("error" in config) {
+    throw new Error(config.error);
+  }
+
+  const { propertyId, clientEmail, privateKey } = config;
+  const gaClient = createGa4Client(clientEmail, privateKey);
   const property = propertyPath(propertyId);
 
-  const [
-    realtimeActiveUsers,
-    summary,
-    usersToday,
-    timeSeries,
-    topPages,
-    trafficSources,
-    devices,
-    countries,
-  ] = await Promise.all([
-    fetchActiveUsers(gaClient, property),
-    fetchSummary(gaClient, property, range),
-    fetchUsersToday(gaClient, property),
-    fetchTimeSeries(gaClient, property, range),
-    fetchTopPages(gaClient, property, range),
-    fetchBreakdown(gaClient, property, range, "sessionDefaultChannelGroup"),
-    fetchBreakdown(gaClient, property, range, "deviceCategory"),
-    fetchBreakdown(gaClient, property, range, "country"),
-  ]);
+  console.info("[ga4] Fetching analytics for property", propertyId, "range", range);
 
-  const data: Ga4AnalyticsData = {
-    range,
-    totalUsers: summary.totalUsers,
-    activeUsers: realtimeActiveUsers,
-    newUsers: summary.newUsers,
-    pageViews: summary.pageViews,
-    sessions: summary.sessions,
-    usersToday,
-    timeSeries,
-    topPages,
-    trafficSources,
-    devices,
-    countries,
-    fetchedAt: new Date().toISOString(),
-  };
+  try {
+    const [
+      activeUsers,
+      summary,
+      timeSeries,
+      topPages,
+      trafficSources,
+      devices,
+      countries,
+    ] = await Promise.all([
+      fetchActiveUsers(gaClient, property),
+      fetchSummary(gaClient, property, range),
+      fetchTimeSeries(gaClient, property, range),
+      fetchTopPages(gaClient, property, range),
+      fetchBreakdown(gaClient, property, range, "sessionDefaultChannelGroup"),
+      fetchBreakdown(gaClient, property, range, "deviceCategory"),
+      fetchBreakdown(gaClient, property, range, "country"),
+    ]);
 
-  cache.set(cacheKey, { data, expiresAt: Date.now() + CACHE_TTL_MS });
-  return data;
+    const data: Ga4AnalyticsData = {
+      source: "ga4",
+      propertyId,
+      range,
+      totalUsers: summary.totalUsers,
+      activeUsers,
+      newUsers: summary.newUsers,
+      pageViews: summary.pageViews,
+      sessions: summary.sessions,
+      timeSeries,
+      topPages,
+      trafficSources,
+      devices,
+      countries,
+      fetchedAt: new Date().toISOString(),
+    };
+
+    cache.set(cacheKey, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+    console.info("[ga4] Analytics loaded:", {
+      propertyId,
+      range,
+      totalUsers: data.totalUsers,
+      pageViews: data.pageViews,
+    });
+    return data;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[ga4] Data API request failed:", message);
+    throw err instanceof Error ? err : new Error(message);
+  }
 }

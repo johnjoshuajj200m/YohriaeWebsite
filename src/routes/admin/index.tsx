@@ -9,7 +9,7 @@ import {
 } from "@/components/admin/AnalyticsSkeleton";
 import { useAdminAnalytics } from "@/hooks/useAdminAnalytics";
 import { useAdminSession } from "@/hooks/useAdminSession";
-import { GA_NOT_CONNECTED } from "@/lib/admin/analytics-errors";
+import { getAnalyticsErrorDisplay } from "@/lib/admin/analytics-errors";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminOverview,
@@ -64,28 +64,23 @@ function AdminOverview() {
           ))}
         </div>
       ) : permissions.canViewAnalytics && analyticsError ? (
-        <AnalyticsErrorState
-          title={
-            analyticsError instanceof Error && analyticsError.message === GA_NOT_CONNECTED
-              ? GA_NOT_CONNECTED
-              : "Could not load Google Analytics"
-          }
-          message={
-            analyticsError instanceof Error && analyticsError.message === GA_NOT_CONNECTED
-              ? "Add GA4_PROPERTY_ID and GA4_SERVICE_ACCOUNT_JSON to your server environment, then redeploy."
-              : analyticsError instanceof Error
-                ? analyticsError.message
-                : "Could not load analytics."
-          }
-          onRetry={() => refetchAnalytics()}
-        />
+        (() => {
+          const display = getAnalyticsErrorDisplay(analyticsError);
+          return (
+            <AnalyticsErrorState
+              title={display.title}
+              message={display.message}
+              onRetry={() => refetchAnalytics()}
+            />
+          );
+        })()
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {permissions.canViewAnalytics && analytics ? (
+          {permissions.canViewAnalytics && analytics?.source === "ga4" ? (
             <>
               <AdminStatCard label="Total users (30d)" value={analytics.totalUsers.toLocaleString()} accent="primary" />
               <AdminStatCard label="Active users" value={analytics.activeUsers.toLocaleString()} accent="magenta" />
-              <AdminStatCard label="Users today" value={analytics.usersToday.toLocaleString()} accent="cyan" />
+              <AdminStatCard label="New users (30d)" value={analytics.newUsers.toLocaleString()} accent="cyan" />
               <AdminStatCard label="Page views (30d)" value={analytics.pageViews.toLocaleString()} accent="gold" />
             </>
           ) : null}
@@ -120,7 +115,9 @@ function AdminOverview() {
                 </div>
               ))
             ) : permissions.canViewAnalytics && analyticsError ? (
-              <p className="text-sm text-muted-foreground">{GA_NOT_CONNECTED}</p>
+              <p className="text-sm text-muted-foreground">
+                {getAnalyticsErrorDisplay(analyticsError).title}
+              </p>
             ) : (
               <p className="text-sm text-muted-foreground">No page analytics available yet.</p>
             )}
