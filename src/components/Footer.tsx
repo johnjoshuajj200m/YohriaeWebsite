@@ -16,9 +16,7 @@ import { Logo } from "./Logo";
 import { FOOTER_LINKS, SITE } from "@/lib/site-config";
 import { toTelHref, toWhatsAppHref, useSiteSettings } from "@/lib/site-settings";
 
-const Newsletter = lazy(() =>
-  import("./Newsletter").then((m) => ({ default: m.Newsletter })),
-);
+const Newsletter = lazy(() => import("./Newsletter").then((m) => ({ default: m.Newsletter })));
 
 export function Footer() {
   const settings = useSiteSettings();

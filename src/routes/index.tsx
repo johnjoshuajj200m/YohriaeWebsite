@@ -466,18 +466,20 @@ function Home() {
           </Link>
         </div>
         <div className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-3">
-          {[HOME_IMAGES.impactHealth, HOME_IMAGES.impactMentalHealth, HOME_IMAGES.partner].map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt="YOHRIAE program activity"
-              width={1280}
-              height={960}
-              loading="lazy"
-              decoding="async"
-              className="aspect-[4/3] w-full rounded-sm object-cover shadow-soft"
-            />
-          ))}
+          {[HOME_IMAGES.impactHealth, HOME_IMAGES.impactMentalHealth, HOME_IMAGES.partner].map(
+            (src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt="YOHRIAE program activity"
+                width={1280}
+                height={960}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[4/3] w-full rounded-sm object-cover shadow-soft"
+              />
+            ),
+          )}
         </div>
       </section>
 
