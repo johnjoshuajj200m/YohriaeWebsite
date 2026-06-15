@@ -1,11 +1,23 @@
-import { BetaAnalyticsDataClient } from "@google-analytics/data";
-import type { Ga4AnalyticsData, Ga4BreakdownItem, Ga4DateRange, Ga4PageItem } from "./analytics.types";
+import { createSign } from "node:crypto";
+import type {
+  Ga4AnalyticsData,
+  Ga4BreakdownItem,
+  Ga4DateRange,
+  Ga4PageItem,
+} from "./analytics.types";
 import { GA_NOT_CONFIGURED, GA_SERVER_ERROR } from "./analytics-errors";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const ACCESS_TOKEN_TTL_MS = 50 * 60 * 1000;
+const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
+const TOKEN_URL = "https://oauth2.googleapis.com/token";
+const DATA_API_BASE = "https://analyticsdata.googleapis.com/v1beta";
 
 type CacheEntry = { data: Ga4AnalyticsData; expiresAt: number };
 const cache = new Map<string, CacheEntry>();
+
+type AccessTokenEntry = { token: string; expiresAt: number };
+let accessTokenCache: (AccessTokenEntry & { clientEmail: string }) | undefined;
 
 export type Ga4AnalyticsResult =
   | { ok: true; data: Ga4AnalyticsData }
@@ -167,22 +179,136 @@ export function getGa4Credentials():
   }
 }
 
-function createGa4Client(clientEmail: string, privateKey: string): BetaAnalyticsDataClient | null {
-  try {
-    return new BetaAnalyticsDataClient({
-      credentials: {
-        client_email: clientEmail,
-        private_key: privateKey,
-      },
-    });
-  } catch (error) {
-    console.error("[ga4] unhandled error", error);
-    return null;
-  }
+function base64UrlEncode(input: Buffer | string) {
+  const buf = typeof input === "string" ? Buffer.from(input) : input;
+  return buf
+    .toString("base64")
+    .replace(/=+$/, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
 }
 
-function propertyPath(propertyId: string) {
-  return `properties/${propertyId}`;
+function signServiceAccountJwt(clientEmail: string, privateKey: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: "RS256", typ: "JWT" };
+  const claim = {
+    iss: clientEmail,
+    scope: GA_SCOPE,
+    aud: TOKEN_URL,
+    iat: now,
+    exp: now + 3600,
+  };
+  const headerPart = base64UrlEncode(JSON.stringify(header));
+  const claimPart = base64UrlEncode(JSON.stringify(claim));
+  const signingInput = `${headerPart}.${claimPart}`;
+  const signer = createSign("RSA-SHA256");
+  signer.update(signingInput);
+  signer.end();
+  const signature = base64UrlEncode(signer.sign(privateKey));
+  return `${signingInput}.${signature}`;
+}
+
+async function fetchAccessToken(clientEmail: string, privateKey: string): Promise<string> {
+  const now = Date.now();
+  if (
+    accessTokenCache &&
+    accessTokenCache.clientEmail === clientEmail &&
+    accessTokenCache.expiresAt > now + 60_000
+  ) {
+    return accessTokenCache.token;
+  }
+
+  const assertion = signServiceAccountJwt(clientEmail, privateKey);
+  const body = new URLSearchParams({
+    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion,
+  });
+
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+
+  const text = await res.text();
+  if (!res.ok) {
+    let detail = text.slice(0, 400);
+    try {
+      const parsed = JSON.parse(text) as { error?: string; error_description?: string };
+      if (parsed.error || parsed.error_description) {
+        detail = `${parsed.error ?? "oauth_error"}: ${parsed.error_description ?? text.slice(0, 200)}`;
+      }
+    } catch {
+      // keep raw text
+    }
+    throw new Error(`OAuth token request failed (${res.status}): ${detail}`);
+  }
+
+  let payload: { access_token?: string; expires_in?: number };
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    throw new Error(`OAuth token response was not JSON: ${text.slice(0, 200)}`);
+  }
+
+  if (!payload.access_token) {
+    throw new Error("OAuth token response missing access_token.");
+  }
+
+  const expiresInMs = (payload.expires_in ?? 3600) * 1000;
+  accessTokenCache = {
+    clientEmail,
+    token: payload.access_token,
+    expiresAt: now + Math.min(expiresInMs, ACCESS_TOKEN_TTL_MS),
+  };
+
+  return payload.access_token;
+}
+
+type RunReportRow = {
+  dimensionValues?: { value?: string | null }[] | null;
+  metricValues?: { value?: string | null }[] | null;
+};
+
+type RunReportResponse = {
+  rows?: RunReportRow[] | null;
+};
+
+async function callGa4Api<T>(params: {
+  accessToken: string;
+  propertyId: string;
+  endpoint: "runReport" | "runRealtimeReport";
+  body: Record<string, unknown>;
+}): Promise<T> {
+  const url = `${DATA_API_BASE}/properties/${params.propertyId}:${params.endpoint}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${params.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params.body),
+  });
+
+  const text = await res.text();
+  if (!res.ok) {
+    let message = `GA4 ${params.endpoint} failed (${res.status})`;
+    try {
+      const parsed = JSON.parse(text) as { error?: { message?: string; status?: string } };
+      const detail = parsed.error?.message ?? text.slice(0, 300);
+      message = `${message}: ${detail}${parsed.error?.status ? ` [${parsed.error.status}]` : ""}`;
+    } catch {
+      message = `${message}: ${text.slice(0, 300)}`;
+    }
+    throw new Error(message);
+  }
+
+  if (!text) return {} as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch (err) {
+    throw new Error(`GA4 ${params.endpoint} returned non-JSON response: ${String(err)}`);
+  }
 }
 
 function rangeToDates(range: Ga4DateRange) {
@@ -198,7 +324,7 @@ function rangeToDates(range: Ga4DateRange) {
   }
 }
 
-function parseMetric(row: { metricValues?: { value?: string | null }[] | null } | null | undefined, index: number) {
+function parseMetric(row: RunReportRow | null | undefined, index: number) {
   return Number(row?.metricValues?.[index]?.value ?? 0);
 }
 
@@ -231,11 +357,13 @@ function withViewShares(items: Ga4PageItem[]): Ga4PageItem[] {
   }));
 }
 
-async function fetchActiveUsers(client: BetaAnalyticsDataClient, property: string) {
+async function fetchActiveUsers(accessToken: string, propertyId: string) {
   try {
-    const [response] = await client.runRealtimeReport({
-      property,
-      metrics: [{ name: "activeUsers" }],
+    const response = await callGa4Api<RunReportResponse>({
+      accessToken,
+      propertyId,
+      endpoint: "runRealtimeReport",
+      body: { metrics: [{ name: "activeUsers" }] },
     });
     return parseMetric(response.rows?.[0], 0);
   } catch (err) {
@@ -245,20 +373,20 @@ async function fetchActiveUsers(client: BetaAnalyticsDataClient, property: strin
   }
 }
 
-async function fetchSummary(
-  client: BetaAnalyticsDataClient,
-  property: string,
-  range: Ga4DateRange,
-) {
-  const [response] = await client.runReport({
-    property,
-    dateRanges: [rangeToDates(range)],
-    metrics: [
-      { name: "totalUsers" },
-      { name: "newUsers" },
-      { name: "screenPageViews" },
-      { name: "sessions" },
-    ],
+async function fetchSummary(accessToken: string, propertyId: string, range: Ga4DateRange) {
+  const response = await callGa4Api<RunReportResponse>({
+    accessToken,
+    propertyId,
+    endpoint: "runReport",
+    body: {
+      dateRanges: [rangeToDates(range)],
+      metrics: [
+        { name: "totalUsers" },
+        { name: "newUsers" },
+        { name: "screenPageViews" },
+        { name: "sessions" },
+      ],
+    },
   });
 
   const row = response.rows?.[0];
@@ -270,23 +398,23 @@ async function fetchSummary(
   };
 }
 
-async function fetchTimeSeries(
-  client: BetaAnalyticsDataClient,
-  property: string,
-  range: Ga4DateRange,
-) {
+async function fetchTimeSeries(accessToken: string, propertyId: string, range: Ga4DateRange) {
   const dimensionName = range === "today" ? "hour" : range === "12m" ? "yearMonth" : "date";
 
-  const [response] = await client.runReport({
-    property,
-    dateRanges: [rangeToDates(range)],
-    dimensions: [{ name: dimensionName }],
-    metrics: [
-      { name: "activeUsers" },
-      { name: "screenPageViews" },
-      { name: "sessions" },
-    ],
-    orderBys: [{ dimension: { dimensionName } }],
+  const response = await callGa4Api<RunReportResponse>({
+    accessToken,
+    propertyId,
+    endpoint: "runReport",
+    body: {
+      dateRanges: [rangeToDates(range)],
+      dimensions: [{ name: dimensionName }],
+      metrics: [
+        { name: "activeUsers" },
+        { name: "screenPageViews" },
+        { name: "sessions" },
+      ],
+      orderBys: [{ dimension: { dimensionName } }],
+    },
   });
 
   return (response.rows ?? []).map((row) => ({
@@ -298,19 +426,23 @@ async function fetchTimeSeries(
 }
 
 async function fetchBreakdown(
-  client: BetaAnalyticsDataClient,
-  property: string,
+  accessToken: string,
+  propertyId: string,
   range: Ga4DateRange,
   dimensionName: string,
   limit = 8,
 ): Promise<Ga4BreakdownItem[]> {
-  const [response] = await client.runReport({
-    property,
-    dateRanges: [rangeToDates(range)],
-    dimensions: [{ name: dimensionName }],
-    metrics: [{ name: "activeUsers" }],
-    orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
-    limit,
+  const response = await callGa4Api<RunReportResponse>({
+    accessToken,
+    propertyId,
+    endpoint: "runReport",
+    body: {
+      dateRanges: [rangeToDates(range)],
+      dimensions: [{ name: dimensionName }],
+      metrics: [{ name: "activeUsers" }],
+      orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+      limit,
+    },
   });
 
   const items = (response.rows ?? []).map((row) => ({
@@ -323,17 +455,21 @@ async function fetchBreakdown(
 }
 
 async function fetchTopPages(
-  client: BetaAnalyticsDataClient,
-  property: string,
+  accessToken: string,
+  propertyId: string,
   range: Ga4DateRange,
 ): Promise<Ga4PageItem[]> {
-  const [response] = await client.runReport({
-    property,
-    dateRanges: [rangeToDates(range)],
-    dimensions: [{ name: "pagePath" }],
-    metrics: [{ name: "screenPageViews" }],
-    orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
-    limit: 10,
+  const response = await callGa4Api<RunReportResponse>({
+    accessToken,
+    propertyId,
+    endpoint: "runReport",
+    body: {
+      dateRanges: [rangeToDates(range)],
+      dimensions: [{ name: "pagePath" }],
+      metrics: [{ name: "screenPageViews" }],
+      orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+      limit: 10,
+    },
   });
 
   const items = (response.rows ?? []).map((row) => ({
@@ -343,6 +479,26 @@ async function fetchTopPages(
   }));
 
   return withViewShares(items);
+}
+
+function classifyGa4Error(message: string, propertyId: string, clientEmail: string): string | undefined {
+  const lower = message.toLowerCase();
+  if (lower.includes("permission_denied") || lower.includes("permission denied")) {
+    return `Grant the service account ${clientEmail} Viewer access on GA4 property ${propertyId} (GA4 Admin → Property → Property Access Management).`;
+  }
+  if (lower.includes("not_found") || lower.includes("does not exist")) {
+    return `GA4 property ${propertyId} was not found. Verify the numeric Property ID in GA4 Admin → Property settings.`;
+  }
+  if (lower.includes("invalid_grant") || lower.includes("invalid jwt signature")) {
+    return "The service account credentials are invalid. Re-download the JSON key and update GOOGLE_CLIENT_EMAIL + GOOGLE_PRIVATE_KEY (with \\n preserved).";
+  }
+  if (lower.includes("unauthenticated") || lower.includes("authentication")) {
+    return "Google rejected the service account authentication. Check GOOGLE_PRIVATE_KEY formatting.";
+  }
+  if (lower.includes("api has not been used") || lower.includes("analyticsdata.googleapis.com")) {
+    return "Enable the Google Analytics Data API in the Google Cloud project.";
+  }
+  return undefined;
 }
 
 export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4AnalyticsResult> {
@@ -359,15 +515,15 @@ export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4Analytics
     }
 
     const { propertyId, clientEmail, privateKey } = config;
-    const gaClient = createGa4Client(clientEmail, privateKey);
-    if (!gaClient) {
-      return ga4Failure(
-        new Error("Could not initialize Google Analytics client."),
-        "BetaAnalyticsDataClient constructor failed. Check that GOOGLE_PRIVATE_KEY is a valid PEM key.",
-      );
+
+    let accessToken: string;
+    try {
+      accessToken = await fetchAccessToken(clientEmail, privateKey);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return ga4Failure(err, classifyGa4Error(message, propertyId, clientEmail));
     }
 
-    const property = propertyPath(propertyId);
     console.info("[ga4] Fetching analytics for property", propertyId, "range", range);
 
     let activeUsers: number;
@@ -381,31 +537,17 @@ export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4Analytics
     try {
       [activeUsers, summary, timeSeries, topPages, trafficSources, devices, countries] =
         await Promise.all([
-          fetchActiveUsers(gaClient, property),
-          fetchSummary(gaClient, property, range),
-          fetchTimeSeries(gaClient, property, range),
-          fetchTopPages(gaClient, property, range),
-          fetchBreakdown(gaClient, property, range, "sessionDefaultChannelGroup"),
-          fetchBreakdown(gaClient, property, range, "deviceCategory"),
-          fetchBreakdown(gaClient, property, range, "country"),
+          fetchActiveUsers(accessToken, propertyId),
+          fetchSummary(accessToken, propertyId, range),
+          fetchTimeSeries(accessToken, propertyId, range),
+          fetchTopPages(accessToken, propertyId, range),
+          fetchBreakdown(accessToken, propertyId, range, "sessionDefaultChannelGroup"),
+          fetchBreakdown(accessToken, propertyId, range, "deviceCategory"),
+          fetchBreakdown(accessToken, propertyId, range, "country"),
         ]);
     } catch (apiError) {
       const message = apiError instanceof Error ? apiError.message : String(apiError);
-      const lower = message.toLowerCase();
-      let hint: string | undefined;
-      if (lower.includes("permission_denied") || lower.includes("permission denied")) {
-        hint = `Grant the service account ${clientEmail} Viewer access on GA4 property ${propertyId} (GA4 Admin → Property → Property Access Management).`;
-      } else if (lower.includes("not_found") || lower.includes("does not exist")) {
-        hint = `GA4 property ${propertyId} was not found. Verify the numeric Property ID in GA4 Admin → Property settings.`;
-      } else if (lower.includes("invalid_grant") || lower.includes("invalid jwt signature")) {
-        hint =
-          "The service account credentials are invalid. Re-download the JSON key and update GOOGLE_CLIENT_EMAIL + GOOGLE_PRIVATE_KEY (with \\n preserved).";
-      } else if (lower.includes("unauthenticated") || lower.includes("authentication")) {
-        hint = "Google rejected the service account authentication. Check GOOGLE_PRIVATE_KEY formatting.";
-      } else if (lower.includes("api has not been used") || lower.includes("analyticsdata.googleapis.com")) {
-        hint = "Enable the Google Analytics Data API in the Google Cloud project.";
-      }
-      return ga4Failure(apiError, hint);
+      return ga4Failure(apiError, classifyGa4Error(message, propertyId, clientEmail));
     }
 
     const data: Ga4AnalyticsData = {
