@@ -1,75 +1,89 @@
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import type { Ga4AnalyticsData, Ga4BreakdownItem, Ga4DateRange, Ga4PageItem } from "./analytics.types";
-import { GA_NOT_CONFIGURED } from "./analytics-errors";
+import { GA_NOT_CONFIGURED, GA_SERVER_ERROR } from "./analytics-errors";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 type CacheEntry = { data: Ga4AnalyticsData; expiresAt: number };
 const cache = new Map<string, CacheEntry>();
 
+export type Ga4AnalyticsResult =
+  | { ok: true; data: Ga4AnalyticsData }
+  | { ok: false; error: string; details?: string };
+
 function readEnv(name: string) {
-  return process.env[name]?.trim() || undefined;
+  try {
+    return process.env[name]?.trim() || undefined;
+  } catch (error) {
+    console.error("[ga4] unhandled error", error);
+    return undefined;
+  }
 }
 
 function normalizePrivateKey(key: string) {
-  return key.replace(/\\n/g, "\n");
+  const trimmed = key.trim();
+  const unquoted =
+    trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed.slice(1, -1) : trimmed;
+  return unquoted.replace(/\\n/g, "\n");
+}
+
+function ga4Failure(error: unknown): Ga4AnalyticsResult {
+  console.error("[ga4] unhandled error", error);
+  return {
+    ok: false,
+    error: GA_SERVER_ERROR,
+    details: String(error instanceof Error ? error.message : error),
+  };
 }
 
 export function getGa4Credentials():
   | { propertyId: string; clientEmail: string; privateKey: string }
   | { error: string } {
-  const propertyId = readEnv("GA4_PROPERTY_ID");
-  const clientEmail = readEnv("GOOGLE_CLIENT_EMAIL");
-  const privateKeyRaw = readEnv("GOOGLE_PRIVATE_KEY");
+  try {
+    const propertyId = readEnv("GA4_PROPERTY_ID");
+    const clientEmail = readEnv("GOOGLE_CLIENT_EMAIL");
+    const privateKeyRaw = readEnv("GOOGLE_PRIVATE_KEY");
 
-  if (propertyId && clientEmail && privateKeyRaw) {
+    if (!propertyId || !clientEmail || !privateKeyRaw) {
+      const missing = [
+        ...(!propertyId ? ["GA4_PROPERTY_ID"] : []),
+        ...(!clientEmail ? ["GOOGLE_CLIENT_EMAIL"] : []),
+        ...(!privateKeyRaw ? ["GOOGLE_PRIVATE_KEY"] : []),
+      ];
+      if (missing.length > 0) {
+        console.warn("[ga4] Missing server env:", missing.join(", "));
+      }
+      return { error: GA_NOT_CONFIGURED };
+    }
+
+    const privateKey = normalizePrivateKey(privateKeyRaw);
+    if (!privateKey.includes("BEGIN")) {
+      console.warn("[ga4] GOOGLE_PRIVATE_KEY may be malformed after newline normalization.");
+    }
+
     return {
       propertyId,
       clientEmail,
-      privateKey: normalizePrivateKey(privateKeyRaw),
+      privateKey,
     };
+  } catch (error) {
+    console.error("[ga4] unhandled error", error);
+    return { error: GA_NOT_CONFIGURED };
   }
-
-  // Backward-compatible fallback: single JSON blob (local dev / legacy Vercel setup).
-  const credentialsJson = readEnv("GA4_SERVICE_ACCOUNT_JSON");
-  if (propertyId && credentialsJson) {
-    try {
-      const parsed = JSON.parse(credentialsJson) as {
-        client_email?: string;
-        private_key?: string;
-      };
-      if (parsed.client_email && parsed.private_key) {
-        return {
-          propertyId,
-          clientEmail: parsed.client_email,
-          privateKey: normalizePrivateKey(parsed.private_key),
-        };
-      }
-    } catch {
-      return { error: GA_NOT_CONFIGURED };
-    }
-  }
-
-  const missing = [
-    ...(!propertyId ? ["GA4_PROPERTY_ID"] : []),
-    ...(!clientEmail ? ["GOOGLE_CLIENT_EMAIL"] : []),
-    ...(!privateKeyRaw ? ["GOOGLE_PRIVATE_KEY"] : []),
-  ];
-
-  if (missing.length > 0) {
-    console.warn("[ga4] Missing server env:", missing.join(", "));
-  }
-
-  return { error: GA_NOT_CONFIGURED };
 }
 
-function createGa4Client(clientEmail: string, privateKey: string) {
-  return new BetaAnalyticsDataClient({
-    credentials: {
-      client_email: clientEmail,
-      private_key: privateKey,
-    },
-  });
+function createGa4Client(clientEmail: string, privateKey: string): BetaAnalyticsDataClient | null {
+  try {
+    return new BetaAnalyticsDataClient({
+      credentials: {
+        client_email: clientEmail,
+        private_key: privateKey,
+      },
+    });
+  } catch (error) {
+    console.error("[ga4] unhandled error", error);
+    return null;
+  }
 }
 
 function propertyPath(propertyId: string) {
@@ -236,25 +250,28 @@ async function fetchTopPages(
   return withViewShares(items);
 }
 
-export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4AnalyticsData> {
-  const cacheKey = range;
-  const cached = cache.get(cacheKey);
-  if (cached && Date.now() < cached.expiresAt) {
-    return cached.data;
-  }
-
-  const config = getGa4Credentials();
-  if ("error" in config) {
-    throw new Error(config.error);
-  }
-
-  const { propertyId, clientEmail, privateKey } = config;
-  const gaClient = createGa4Client(clientEmail, privateKey);
-  const property = propertyPath(propertyId);
-
-  console.info("[ga4] Fetching analytics for property", propertyId, "range", range);
-
+export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4AnalyticsResult> {
   try {
+    const cacheKey = range;
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return { ok: true, data: cached.data };
+    }
+
+    const config = getGa4Credentials();
+    if ("error" in config) {
+      return { ok: false, error: config.error };
+    }
+
+    const { propertyId, clientEmail, privateKey } = config;
+    const gaClient = createGa4Client(clientEmail, privateKey);
+    if (!gaClient) {
+      return ga4Failure(new Error("Could not initialize Google Analytics client."));
+    }
+
+    const property = propertyPath(propertyId);
+    console.info("[ga4] Fetching analytics for property", propertyId, "range", range);
+
     const [
       activeUsers,
       summary,
@@ -297,10 +314,8 @@ export async function getGa4Analytics(range: Ga4DateRange): Promise<Ga4Analytics
       totalUsers: data.totalUsers,
       pageViews: data.pageViews,
     });
-    return data;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[ga4] Data API request failed:", message);
-    throw err instanceof Error ? err : new Error(message);
+    return { ok: true, data };
+  } catch (error) {
+    return ga4Failure(error);
   }
 }

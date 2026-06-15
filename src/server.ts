@@ -6,7 +6,7 @@ import {
   ANALYTICS_API_PATH,
   respondToAnalyticsApiRequest,
 } from "./lib/admin/analytics-api.server";
-import { isJsonApiRequest, jsonErrorResponse } from "./lib/api/json-response.server";
+import { isJsonApiRequest, jsonErrorResponse, jsonGa4UnhandledError } from "./lib/api/json-response.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -56,7 +56,11 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
     if (url.pathname === ANALYTICS_API_PATH) {
-      return respondToAnalyticsApiRequest(request);
+      try {
+        return await respondToAnalyticsApiRequest(request);
+      } catch (error) {
+        return jsonGa4UnhandledError(error);
+      }
     }
 
     try {

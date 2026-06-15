@@ -1,5 +1,7 @@
 export const GA_NOT_CONFIGURED = "Google Analytics API is not configured yet.";
 
+export const GA_SERVER_ERROR = "Google Analytics server error.";
+
 export const ANALYTICS_API_UNREACHABLE = "Analytics API route is not reachable.";
 
 /** JSON API route for admin GA4 analytics (handled by Nitro / TanStack server route). */
@@ -64,6 +66,13 @@ export function getAnalyticsErrorDisplay(error: unknown) {
     return {
       title: GA_NOT_CONFIGURED,
       message: `${GA4_SETUP_HINT} Required: ${GA4_SETUP_ENV_VARS.join(", ")}.`,
+    };
+  }
+
+  if (message === GA_SERVER_ERROR) {
+    return {
+      title: GA_SERVER_ERROR,
+      message: "The Google Analytics server returned an error. Check Vercel function logs for details.",
     };
   }
 

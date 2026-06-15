@@ -4,6 +4,7 @@ import {
   ANALYTICS_API_PATH,
   ANALYTICS_API_UNREACHABLE,
   GA_NOT_CONFIGURED,
+  GA_SERVER_ERROR,
   sanitizeAnalyticsError,
 } from "./analytics-errors";
 
@@ -75,7 +76,24 @@ export async function fetchAdminAnalyticsApi(range: Ga4DateRange): Promise<Admin
     return { ok: false, error: ANALYTICS_API_UNREACHABLE };
   }
 
-  const result = payload as { ok?: boolean; error?: string; analytics?: Ga4AnalyticsData };
+  const result = payload as {
+    ok?: boolean;
+    error?: unknown;
+    details?: string;
+    analytics?: Ga4AnalyticsData;
+    unhandled?: boolean;
+    status?: number;
+  };
+
+  if (result.unhandled === true || result.error === true) {
+    logAnalyticsFetchFailed({
+      url,
+      status: response.status,
+      contentType,
+      detail: "h3 unhandled server error",
+    });
+    return { ok: false, error: GA_SERVER_ERROR };
+  }
 
   if (!result.ok) {
     const error = sanitizeAnalyticsError(String(result.error ?? ""));
@@ -83,7 +101,7 @@ export async function fetchAdminAnalyticsApi(range: Ga4DateRange): Promise<Admin
       url,
       status: response.status,
       contentType,
-      detail: error === GA_NOT_CONFIGURED ? "credentials missing" : error,
+      detail: result.details ?? (error === GA_NOT_CONFIGURED ? "credentials missing" : error),
     });
     return { ok: false, error };
   }
