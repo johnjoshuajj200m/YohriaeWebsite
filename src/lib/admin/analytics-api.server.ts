@@ -1,6 +1,6 @@
 import { handleAdminAnalyticsHttpRequest } from "./analytics-handler.server";
 import { jsonErrorResponse, jsonGa4UnhandledError, jsonResponse } from "@/lib/api/json-response.server";
-import { ANALYTICS_API_PATH } from "./analytics-errors";
+import { ANALYTICS_API_PATH } from "@/lib/api/server-api-routes.server";
 
 export { ANALYTICS_API_PATH };
 

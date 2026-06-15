@@ -19,5 +19,7 @@ export default defineConfig({
   // still enabled; switch the preset via the NITRO_PRESET env var if needed.
   nitro: {
     preset: "vercel",
+    // @ts-expect-error Nitro scanDirs registers routes/ before the SSR catch-all on Vercel.
+    scanDirs: ["routes"],
   },
 });

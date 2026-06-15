@@ -2,10 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
-import {
-  ANALYTICS_API_PATH,
-  respondToAnalyticsApiRequest,
-} from "./lib/admin/analytics-api.server";
+import { dispatchServerApiRoute } from "./lib/api/server-api-routes.server";
 import { isJsonApiRequest, jsonErrorResponse, jsonGa4UnhandledError } from "./lib/api/json-response.server";
 
 type ServerEntry = {
@@ -54,13 +51,13 @@ async function normalizeCatastrophicSsrResponse(
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    const url = new URL(request.url);
-    if (url.pathname === ANALYTICS_API_PATH) {
-      try {
-        return await respondToAnalyticsApiRequest(request);
-      } catch (error) {
-        return jsonGa4UnhandledError(error);
+    try {
+      const apiResponse = await dispatchServerApiRoute(request);
+      if (apiResponse) {
+        return apiResponse;
       }
+    } catch (error) {
+      return jsonGa4UnhandledError(error);
     }
 
     try {
