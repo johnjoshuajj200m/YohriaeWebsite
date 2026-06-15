@@ -28,12 +28,15 @@ export function initializeAnalytics() {
   window.gtag("config", GA_MEASUREMENT_ID, { send_page_view: false });
 }
 
-export function trackPageView(path: string, title = document.title) {
+export function trackPageView(path: string, title?: string) {
   if (!isProduction || !GA_MEASUREMENT_ID || typeof window === "undefined" || !window.gtag) return;
+
+  const resolvedTitle =
+    title ?? (typeof document !== "undefined" ? document.title : undefined);
 
   window.gtag("event", "page_view", {
     page_path: path,
-    page_title: title,
+    page_title: resolvedTitle,
     page_location: new URL(path, window.location.origin).href,
   });
 }

@@ -5,6 +5,7 @@ import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, BookOpen } from "lucide-react";
+import { buildPageHead } from "@/lib/seo";
 
 function BlogCover({
   src,
@@ -46,19 +47,13 @@ function BlogCover({
 }
 
 export const Route = createFileRoute("/blog")({
-  head: () => ({
-    meta: [
-      { title: "Blog — YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Stories, insights and updates from YOHRIAE — youth voices, advocacy wins and program impact across Northern Nigeria.",
-      },
-      { property: "og:title", content: "YOHRIAE Blog" },
-      { property: "og:url", content: "/blog" },
-    ],
-    links: [{ rel: "canonical", href: "/blog" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Blog — Stories, Insights & Updates from YOHRIAE",
+      description:
+        "YOHRIAE stories, insights, advocacy wins, and program updates — youth voices and community impact from Northern Nigeria.",
+      path: "/blog",
+    }),
   component: Blog,
 });
 

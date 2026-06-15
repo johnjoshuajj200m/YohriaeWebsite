@@ -15,6 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeAnalytics, trackPageView } from "@/lib/analytics";
+import { DEFAULT_OG_IMAGE, SITE_URL, TWITTER_HANDLE } from "@/lib/seo";
+import { SITE } from "@/lib/site-config";
 
 function NotFoundComponent() {
   return (
@@ -40,9 +42,19 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
-  const router = useRouter();
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    router = useRouter();
+  } catch {
+    router = null;
+  }
+
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    try {
+      reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    } catch {
+      // Never let the error reporter itself throw inside the error boundary.
+    }
   }, [error]);
 
   return (
@@ -57,7 +69,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
-              router.invalidate();
+              try {
+                router?.invalidate();
+              } catch {
+                // ignore
+              }
               reset();
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -76,34 +92,42 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+const ROOT_TITLE =
+  "YOHRIAE — Youth Health and Rights Initiative for Advocacy and Empowerment";
+const ROOT_DESCRIPTION =
+  "YOHRIAE is a youth-led nonprofit advancing health, human rights, advocacy, and community empowerment for young people across Northern Nigeria.";
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "YOHRIAE — Youth Health and Right Initiative for Advocacy and Empowerment" },
-      {
-        name: "description",
-        content:
-          "YOHRIAE empowers young people and vulnerable communities across Northern Nigeria through health, human rights, advocacy and sustainable development.",
-      },
+      { name: "format-detection", content: "telephone=no" },
+      { title: ROOT_TITLE },
+      { name: "description", content: ROOT_DESCRIPTION },
       { name: "author", content: "YOHRIAE" },
+      { name: "publisher", content: "YOHRIAE" },
+      {
+        name: "keywords",
+        content:
+          "YOHRIAE, youth health, human rights, advocacy, empowerment, NGO Nigeria, nonprofit, Northern Nigeria, community development, youth-led organization, adolescent health, SRHR, gender-based violence prevention",
+      },
+      { name: "theme-color", content: "#0F4C81" },
+      { name: "color-scheme", content: "light" },
       { property: "og:site_name", content: "YOHRIAE" },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "YOHRIAE — Youth Health and Right Initiative for Advocacy and Empowerment" },
-      {
-        property: "og:description",
-        content:
-          "Health, human rights, advocacy and sustainable development for young people and vulnerable communities in Northern Nigeria.",
-      },
+      { property: "og:locale", content: "en_US" },
+      { property: "og:title", content: ROOT_TITLE },
+      { property: "og:description", content: ROOT_DESCRIPTION },
+      { property: "og:url", content: SITE_URL },
+      { property: "og:image", content: DEFAULT_OG_IMAGE },
+      { property: "og:image:alt", content: "YOHRIAE — empowering young people in Northern Nigeria" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#0F4C81" },
-      { name: "twitter:title", content: "YOHRIAE — Youth Health and Right Initiative for Advocacy and Empowerment" },
-      { name: "description", content: "YOHRIAE advances youth health, human rights, advocacy, and community empowerment across Northern Nigeria." },
-      { property: "og:description", content: "YOHRIAE advances youth health, human rights, advocacy, and community empowerment across Northern Nigeria." },
-      { name: "twitter:description", content: "YOHRIAE advances youth health, human rights, advocacy, and community empowerment across Northern Nigeria." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/455a4834-473e-498a-96ee-f27782a83a37/id-preview-7228dcee--bc2d6ffa-72f5-4f13-b479-e0b873f18d0e.lovable.app-1781368796558.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/455a4834-473e-498a-96ee-f27782a83a37/id-preview-7228dcee--bc2d6ffa-72f5-4f13-b479-e0b873f18d0e.lovable.app-1781368796558.png" },
+      { name: "twitter:site", content: TWITTER_HANDLE },
+      { name: "twitter:creator", content: TWITTER_HANDLE },
+      { name: "twitter:title", content: ROOT_TITLE },
+      { name: "twitter:description", content: ROOT_DESCRIPTION },
+      { name: "twitter:image", content: DEFAULT_OG_IMAGE },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -113,20 +137,53 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap",
       },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
     scripts: [
       {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "NGO",
-          name: "YOHRIAE",
-          alternateName: "Youth Health and Right Initiative for Advocacy and Empowerment",
-          url: "/",
-          areaServed: "Northern Nigeria",
-          foundingDate: "2019",
-          description:
-            "YOHRIAE empowers young people and vulnerable communities through health, human rights, advocacy and sustainable development.",
+          "@graph": [
+            {
+              "@type": "NGO",
+              "@id": `${SITE_URL}/#organization`,
+              name: SITE.name,
+              alternateName: SITE.longName,
+              url: SITE_URL,
+              logo: `${SITE_URL}/favicon.svg`,
+              image: DEFAULT_OG_IMAGE,
+              description:
+                "YOHRIAE empowers young people and vulnerable communities through health, human rights, advocacy and sustainable development.",
+              foundingDate: SITE.founded,
+              founder: { "@type": "Person", name: SITE.executiveDirector },
+              areaServed: { "@type": "AdministrativeArea", name: "Northern Nigeria" },
+              email: SITE.email,
+              telephone: SITE.phone,
+              address: {
+                "@type": "PostalAddress",
+                addressRegion: "Northern Nigeria",
+                addressCountry: "NG",
+              },
+              sameAs: [
+                SITE.social.twitter,
+                SITE.social.facebook,
+                SITE.social.instagram,
+                SITE.social.linkedin,
+                SITE.social.tiktok,
+              ],
+            },
+            {
+              "@type": "WebSite",
+              "@id": `${SITE_URL}/#website`,
+              url: SITE_URL,
+              name: SITE.name,
+              description: ROOT_DESCRIPTION,
+              publisher: { "@id": `${SITE_URL}/#organization` },
+              inLanguage: "en-US",
+            },
+          ],
         }),
       },
     ],

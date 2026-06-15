@@ -2,21 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { HeartHandshake, Mail, MessageCircle } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { toWhatsAppHref, useSiteSettings } from "@/lib/site-settings";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/volunteer")({
-  head: () => ({
-    meta: [
-      { title: "Volunteer With YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Volunteer with YOHRIAE to support youth health, human rights, community outreach, and advocacy programs.",
-      },
-      { property: "og:title", content: "Volunteer With YOHRIAE" },
-      { property: "og:url", content: "/volunteer" },
-    ],
-    links: [{ rel: "canonical", href: "/volunteer" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Volunteer With YOHRIAE — Support Youth, Health & Rights Programs",
+      description:
+        "Use your time and skills to support YOHRIAE's youth health, human rights, advocacy, and community outreach programs across Northern Nigeria.",
+      path: "/volunteer",
+    }),
   component: Volunteer,
 });
 

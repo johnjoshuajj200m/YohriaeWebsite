@@ -3,21 +3,16 @@ import { PageHero } from "@/components/PageHero";
 import { Handshake, Heart } from "lucide-react";
 import { useState } from "react";
 import { analyticsEvents } from "@/lib/analytics";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/donate")({
-  head: () => ({
-    meta: [
-      { title: "Donate — YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Support YOHRIAE's work in health, human rights and youth empowerment across Northern Nigeria.",
-      },
-      { property: "og:title", content: "Donate to YOHRIAE" },
-      { property: "og:url", content: "/donate" },
-    ],
-    links: [{ rel: "canonical", href: "/donate" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Donate to YOHRIAE — Fund Youth Health, Rights & Empowerment",
+      description:
+        "Your gift supports YOHRIAE's community work on youth health, human rights, advocacy, and empowerment in Northern Nigeria. Give securely today.",
+      path: "/donate",
+    }),
   component: Donate,
 });
 

@@ -22,23 +22,16 @@ import {
 } from "@/lib/site-config";
 import { analyticsEvents } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      {
-        title: "YOHRIAE — Empowering Young People. Building Stronger Communities.",
-      },
-      {
-        name: "description",
-        content: SITE.description,
-      },
-      { property: "og:title", content: SITE.tagline },
-      { property: "og:description", content: SITE.description },
-      { property: "og:url", content: "/" },
-    ],
-    links: [{ rel: "canonical", href: "/" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title:
+        "YOHRIAE — Youth Health, Human Rights & Empowerment in Northern Nigeria",
+      description: SITE.description,
+      path: "/",
+    }),
   component: Home,
 });
 
@@ -121,7 +114,10 @@ function Home() {
       <HeroAnnouncement />
 
       {/* Impact stats — colored top borders, 2 cols mobile / 4 desktop */}
-      <section className="border-b border-border bg-surface section-padding">
+      <section
+        aria-label="Our impact"
+        className="border-b border-border bg-surface section-padding"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             eyebrow="Our Impact"
@@ -438,7 +434,10 @@ function Home() {
       </section>
 
       {/* Partner / Donate CTA */}
-      <section className="relative overflow-hidden border-t border-border bg-primary">
+      <section
+        aria-labelledby="home-cta-title"
+        className="relative overflow-hidden border-t border-border bg-primary"
+      >
         <span
           aria-hidden
           className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[var(--brand-magenta)] via-[var(--brand-cyan)] to-[var(--brand-gold)]"
@@ -449,7 +448,7 @@ function Home() {
               <p className="text-xs font-semibold uppercase tracking-wide text-white/70">
                 Get Involved
               </p>
-              <h2 className="mt-3 text-2xl font-bold text-white sm:text-3xl">
+              <h2 id="home-cta-title" className="mt-3 text-white">
                 Partner with or support YOHRIAE
               </h2>
               <p className="mt-4 max-w-xl text-[0.95rem] leading-relaxed text-white/85 sm:text-base">

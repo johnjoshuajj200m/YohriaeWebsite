@@ -1,0 +1,11 @@
+# YOHRIAE — https://www.yohriae.com
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /auth
+Disallow: /auth/
+Disallow: /api/
+Disallow: /_serverFn/
+
+Sitemap: https://www.yohriae.com/sitemap.xml

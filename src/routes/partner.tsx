@@ -5,21 +5,16 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { SITE } from "@/lib/site-config";
 import { analyticsEvents } from "@/lib/analytics";
 import { toTelHref, toWhatsAppHref, useSiteSettings } from "@/lib/site-settings";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/partner")({
-  head: () => ({
-    meta: [
-      { title: "Partner With YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Partner with YOHRIAE to advance youth health, rights, advocacy, and community empowerment in Northern Nigeria.",
-      },
-      { property: "og:title", content: "Partner With YOHRIAE" },
-      { property: "og:url", content: "/partner" },
-    ],
-    links: [{ rel: "canonical", href: "/partner" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Partner With YOHRIAE — Donors, NGOs & Community Collaboration",
+      description:
+        "Partner with YOHRIAE to advance youth health, human rights, advocacy, and community empowerment programs in Northern Nigeria.",
+      path: "/partner",
+    }),
   component: Partner,
 });
 

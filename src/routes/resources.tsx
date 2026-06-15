@@ -1,21 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, Calendar, FileText, Images } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/resources")({
-  head: () => ({
-    meta: [
-      { title: "Resources — YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Explore YOHRIAE resources, blog updates, events, reports, and photo stories from community programs.",
-      },
-      { property: "og:title", content: "YOHRIAE Resources" },
-      { property: "og:url", content: "/resources" },
-    ],
-    links: [{ rel: "canonical", href: "/resources" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Resources — Blog, Events, Reports & Stories | YOHRIAE",
+      description:
+        "Public resources from YOHRIAE: blog updates, events, reports, and photo stories from our work on youth health, rights, and community empowerment.",
+      path: "/resources",
+    }),
   component: Resources,
 });
 

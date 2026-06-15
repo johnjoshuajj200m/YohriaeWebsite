@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="YOHRIAE">
+  <title>YOHRIAE</title>
+  <rect width="64" height="64" rx="12" fill="#0F4C81"/>
+  <path d="M14 18l10 18v10h6V36l10-18h-7l-6 12-6-12z" fill="#FFFFFF"/>
+  <rect x="14" y="50" width="36" height="3" rx="1.5" fill="#C2188F"/>
+</svg>

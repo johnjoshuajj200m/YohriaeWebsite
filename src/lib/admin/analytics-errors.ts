@@ -4,8 +4,12 @@ export const GA_SERVER_ERROR = "Google Analytics server error.";
 
 export const ANALYTICS_API_UNREACHABLE = "Analytics API route is not reachable.";
 
-/** JSON API route for admin GA4 analytics (Nitro route + server.ts intercept). */
-export { ANALYTICS_API_PATH } from "@/lib/api/server-api-routes.server";
+/**
+ * JSON API route for admin GA4 analytics (Nitro route + server.ts intercept).
+ * Inlined as a plain string so this file is safe to import from client code —
+ * it never pulls in `.server.ts` modules transitively.
+ */
+export const ANALYTICS_API_PATH = "/api/analytics";
 
 /** @deprecated Use GA_NOT_CONFIGURED */
 export const GA_NOT_CONNECTED = GA_NOT_CONFIGURED;

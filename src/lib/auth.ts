@@ -10,10 +10,11 @@ export function getAuthCallbackUrl(nextPath = DEFAULT_POST_AUTH_PATH) {
 
 export function normalizeRedirectPath(redirectUri?: string) {
   if (!redirectUri) return DEFAULT_POST_AUTH_PATH;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   try {
-    const url = new URL(redirectUri, window.location.origin);
-    if (url.origin !== window.location.origin) return DEFAULT_POST_AUTH_PATH;
+    const url = new URL(redirectUri, origin || "https://yohriae.local");
+    if (origin && url.origin !== origin) return DEFAULT_POST_AUTH_PATH;
     return url.pathname + url.search + url.hash || DEFAULT_POST_AUTH_PATH;
   } catch {
     if (redirectUri.startsWith("/")) return redirectUri;

@@ -74,13 +74,23 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
               {doneMessage}
             </p>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <form
+              onSubmit={handleSubmit}
+              aria-label="Newsletter signup"
+              className="mt-3 flex flex-col gap-2 sm:flex-row"
+            >
+              <label htmlFor="newsletter-email" className="sr-only">
+                Email address
+              </label>
               <input
+                id="newsletter-email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email address"
+                aria-describedby="newsletter-privacy"
                 className={`min-w-0 flex-1 rounded-md border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                   dark
                     ? "border-white/20 bg-white/8 text-white placeholder:text-white/40 focus:border-[var(--brand-cyan)] focus:ring-[color-mix(in_srgb,var(--brand-cyan)_25%,transparent)]"
@@ -103,7 +113,10 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
           {status === "error" && (
             <p className="mt-2 text-sm text-destructive">Subscription failed. Please try again later.</p>
           )}
-          <p className={`mt-3 text-xs ${dark ? "text-white/45" : "text-muted-foreground"}`}>
+          <p
+            id="newsletter-privacy"
+            className={`mt-3 text-xs ${dark ? "text-white/45" : "text-muted-foreground"}`}
+          >
             Unsubscribe anytime. We respect your privacy.
           </p>
         </div>

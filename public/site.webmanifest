@@ -1,0 +1,18 @@
+{
+  "name": "YOHRIAE — Youth Health and Rights Initiative for Advocacy and Empowerment",
+  "short_name": "YOHRIAE",
+  "description": "Youth-led nonprofit advancing health, human rights, advocacy, and empowerment in Northern Nigeria.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0F4C81",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

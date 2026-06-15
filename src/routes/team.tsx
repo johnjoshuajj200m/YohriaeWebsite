@@ -3,20 +3,16 @@ import { PageHero } from "@/components/PageHero";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { IMAGES } from "@/assets/images";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/team")({
-  head: () => ({
-    meta: [
-      { title: "Our Team — YOHRIAE" },
-      {
-        name: "description",
-        content: "Meet the people behind YOHRIAE — our leadership, staff and advisors.",
-      },
-      { property: "og:title", content: "Our Team — YOHRIAE" },
-      { property: "og:url", content: "/team" },
-    ],
-    links: [{ rel: "canonical", href: "/team" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Our Team — Leadership, Staff & Advisors | YOHRIAE",
+      description:
+        "Meet the people behind YOHRIAE — the leadership, staff, and advisors driving youth health, human rights, and empowerment programs in Northern Nigeria.",
+      path: "/team",
+    }),
   component: Team,
 });
 

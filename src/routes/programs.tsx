@@ -4,21 +4,16 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { PROGRAM_IMAGES } from "@/assets/images";
 import { ArrowRight, Heart, Sprout, Scale, Shield, Users, GraduationCap, Megaphone, Brain } from "lucide-react";
 import { analyticsEvents } from "@/lib/analytics";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/programs")({
-  head: () => ({
-    meta: [
-      { title: "Programs — YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "YOHRIAE programs span health education, human rights advocacy, youth empowerment, GBV prevention, community engagement, and policy influence.",
-      },
-      { property: "og:title", content: "Our Programs — YOHRIAE" },
-      { property: "og:url", content: "/programs" },
-    ],
-    links: [{ rel: "canonical", href: "/programs" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Our Programs — Health, Rights, Leadership & Empowerment | YOHRIAE",
+      description:
+        "Explore YOHRIAE programs: health education, human rights advocacy, youth empowerment, GBV prevention, mental health support, and community engagement in Northern Nigeria.",
+      path: "/programs",
+    }),
   component: Programs,
 });
 

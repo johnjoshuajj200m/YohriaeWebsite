@@ -6,21 +6,16 @@ import { PageHero } from "@/components/PageHero";
 import { SectionHeader } from "@/components/SectionHeader";
 import { GALLERY } from "@/assets/images";
 import { supabase } from "@/integrations/supabase/client";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/gallery")({
-  head: () => ({
-    meta: [
-      { title: "Gallery — YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Photographs from YOHRIAE programs, events and community engagement across Northern Nigeria.",
-      },
-      { property: "og:title", content: "YOHRIAE Gallery" },
-      { property: "og:url", content: "/gallery" },
-    ],
-    links: [{ rel: "canonical", href: "/gallery" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Photo Gallery — Community Programs & Events | YOHRIAE",
+      description:
+        "Browse photographs from YOHRIAE programs, advocacy events, trainings, and community engagement across Northern Nigeria.",
+      path: "/gallery",
+    }),
   component: Gallery,
 });
 

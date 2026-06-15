@@ -35,11 +35,14 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header
+      role="banner"
+      className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+    >
       <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-3 px-4 sm:gap-5 sm:px-6 lg:h-[84px] lg:px-8">
         <Logo />
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Primary">
           {NAV_LINKS.map((l) => {
             const active = location.pathname === l.to;
             return (
@@ -97,6 +100,7 @@ export function Header() {
 
       {/* Mobile drawer */}
       <div
+        id="mobile-menu-overlay"
         className={`fixed inset-0 top-[72px] z-40 lg:hidden ${
           open ? "pointer-events-auto" : "pointer-events-none"
         }`}
@@ -113,6 +117,9 @@ export function Header() {
         />
         <div
           id="mobile-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation"
           className={`absolute inset-x-0 top-0 origin-top bg-background shadow-[0_24px_48px_-12px_rgba(15,76,129,0.25)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             open ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-0"
           }`}
@@ -120,7 +127,7 @@ export function Header() {
           {/* Magenta → cyan accent strip */}
           <div className="h-[3px] w-full bg-gradient-to-r from-[var(--brand-magenta)] via-[var(--brand-cyan)] to-[var(--brand-gold)]" />
           <div className="max-h-[calc(100vh-72px)] overflow-y-auto px-5 pb-7 pt-4 sm:px-6">
-            <nav className="flex flex-col" aria-label="Mobile">
+            <nav className="flex flex-col" aria-label="Mobile primary">
               {NAV_LINKS.map((l, idx) => {
                 const active = location.pathname === l.to;
                 return (

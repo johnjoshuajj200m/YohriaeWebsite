@@ -5,22 +5,16 @@ import { CheckCircle2, Target, Compass, HeartHandshake, ArrowRight } from "lucid
 import { IMAGES } from "@/assets/images";
 import { CORE_VALUES, IMPACT_STATS, SITE, TESTIMONIALS } from "@/lib/site-config";
 import { CountUpStat } from "@/components/CountUpStat";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: "About YOHRIAE — Our Story, Mission and Values" },
-      {
-        name: "description",
-        content:
-          "Learn about YOHRIAE: our history, mission, vision, core values and thematic areas across Northern Nigeria.",
-      },
-      { property: "og:title", content: "About YOHRIAE" },
-      { property: "og:description", content: "Our story, mission, vision and values." },
-      { property: "og:url", content: "/about" },
-    ],
-    links: [{ rel: "canonical", href: "/about" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "About YOHRIAE — Our Story, Mission, Vision and Values",
+      description:
+        "YOHRIAE is a youth-led nonprofit working across Northern Nigeria on health, human rights, advocacy, and community empowerment. Learn our story, mission, and values.",
+      path: "/about",
+    }),
   component: About,
 });
 

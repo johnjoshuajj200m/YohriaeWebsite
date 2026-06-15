@@ -20,7 +20,11 @@ export function Footer() {
   const settings = useSiteSettings();
 
   return (
-    <footer className="footer-dark mt-auto bg-[#0a2540]">
+    <footer
+      role="contentinfo"
+      aria-label="Site footer"
+      className="footer-dark mt-auto bg-[#0a2540]"
+    >
       <div className="h-[3px] w-full bg-gradient-to-r from-[var(--brand-magenta)] via-[var(--brand-cyan)] to-[var(--brand-gold)]" />
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
         {/* Brand + link columns */}
@@ -36,12 +40,15 @@ export function Footer() {
             <p className="mt-1 text-xs text-white/55">Est. {SITE.founded}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-2 md:grid-cols-4 md:gap-x-6">
+          <nav
+            aria-label="Footer"
+            className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-2 md:grid-cols-4 md:gap-x-6"
+          >
             <FooterColumn title="About" links={FOOTER_LINKS.about} />
             <FooterColumn title="Programs" links={FOOTER_LINKS.programs} />
             <FooterColumn title="Resources" links={FOOTER_LINKS.resources} />
             <FooterColumn title="Get Involved" links={FOOTER_LINKS.getInvolved} />
-          </div>
+          </nav>
         </div>
 
         {/* Contact + newsletter */}

@@ -17,13 +17,17 @@ export function SectionHeader({
 
   return (
     <div className={centered ? "mx-auto max-w-3xl text-center" : "max-w-3xl"}>
-      {eyebrow && <p className="text-eyebrow">{eyebrow}</p>}
-      <h2 className={`mt-3 text-2xl font-bold tracking-tight sm:text-3xl ${centered ? "" : ""}`}>
-        {title}
-      </h2>
+      {eyebrow && (
+        <p
+          className={`text-eyebrow ${centered ? "inline-flex items-center justify-center" : "eyebrow-line"}`}
+        >
+          <span>{eyebrow}</span>
+        </p>
+      )}
+      <h2 className="mt-3">{title}</h2>
       {description && (
         <p
-          className={`mt-4 text-base leading-relaxed text-muted-foreground ${
+          className={`mt-4 text-base leading-relaxed text-muted-foreground sm:text-[1.0625rem] ${
             centered ? "mx-auto" : ""
           }`}
         >

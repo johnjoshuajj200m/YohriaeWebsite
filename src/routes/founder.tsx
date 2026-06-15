@@ -3,21 +3,16 @@ import { PageHero } from "@/components/PageHero";
 import { Quote } from "lucide-react";
 import { IMAGES } from "@/assets/images";
 import { SITE } from "@/lib/site-config";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/founder")({
-  head: () => ({
-    meta: [
-      { title: "Founder — YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Meet the founder of YOHRIAE and learn about the vision that shapes our work across Northern Nigeria.",
-      },
-      { property: "og:title", content: "Meet the YOHRIAE Founder" },
-      { property: "og:url", content: "/founder" },
-    ],
-    links: [{ rel: "canonical", href: "/founder" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: `Meet the Founder — ${SITE.executiveDirector} | YOHRIAE`,
+      description: `Read the founder's story behind YOHRIAE and the conviction that drives our work on youth health, human rights, and community empowerment in Northern Nigeria.`,
+      path: "/founder",
+      type: "profile",
+    }),
   component: Founder,
 });
 

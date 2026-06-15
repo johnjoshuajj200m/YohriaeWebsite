@@ -5,21 +5,16 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar, ExternalLink, MapPin } from "lucide-react";
 import { analyticsEvents } from "@/lib/analytics";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/events")({
-  head: () => ({
-    meta: [
-      { title: "Events — YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Upcoming and past YOHRIAE events: dialogues, trainings, advocacy convenings and community outreach.",
-      },
-      { property: "og:title", content: "YOHRIAE Events" },
-      { property: "og:url", content: "/events" },
-    ],
-    links: [{ rel: "canonical", href: "/events" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Events — Trainings, Dialogues & Community Outreach | YOHRIAE",
+      description:
+        "See upcoming and past YOHRIAE events: youth dialogues, health trainings, advocacy convenings, and community outreach across Northern Nigeria.",
+      path: "/events",
+    }),
   component: Events,
 });
 

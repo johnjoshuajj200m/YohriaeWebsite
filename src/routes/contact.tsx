@@ -7,21 +7,16 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { analyticsEvents } from "@/lib/analytics";
 import { toTelHref, toWhatsAppHref, useSiteSettings } from "@/lib/site-settings";
+import { buildPageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({
-    meta: [
-      { title: "Contact YOHRIAE" },
-      {
-        name: "description",
-        content:
-          "Get in touch with YOHRIAE — partnerships, media, volunteering, and general inquiries.",
-      },
-      { property: "og:title", content: "Contact YOHRIAE" },
-      { property: "og:url", content: "/contact" },
-    ],
-    links: [{ rel: "canonical", href: "/contact" }],
-  }),
+  head: () =>
+    buildPageHead({
+      title: "Contact YOHRIAE — Partnerships, Media & General Inquiries",
+      description:
+        "Get in touch with YOHRIAE for partnerships, media, volunteering, or general inquiries. Email, WhatsApp, and phone contact details for Northern Nigeria.",
+      path: "/contact",
+    }),
   component: Contact,
 });
 
