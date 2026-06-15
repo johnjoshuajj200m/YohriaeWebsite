@@ -82,11 +82,15 @@ function AdminNewsletter() {
         </p>
         <ul className="mt-2 list-inside list-disc space-y-1">
           <li>
-            <code className="text-xs">RESEND_API_KEY</code> — Resend API key (server only)
+            <code className="text-xs">RESEND_API_KEY</code> — Resend API key (server only, no VITE_ prefix)
           </li>
           <li>
             <code className="text-xs">NEWSLETTER_FROM_EMAIL</code> — verified sender, e.g.{" "}
-            <code className="text-xs">YOHRIAE &lt;noreply@yohriae.com&gt;</code>
+            <code className="text-xs">YOHRIAE &lt;newsletters@yohriae.com&gt;</code>
+          </li>
+          <li>
+            <code className="text-xs">SUPABASE_URL</code> +{" "}
+            <code className="text-xs">SUPABASE_SERVICE_ROLE_KEY</code> (or publishable key fallback)
           </li>
         </ul>
         <p className="mt-2">

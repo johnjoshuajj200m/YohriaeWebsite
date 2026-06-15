@@ -6,7 +6,7 @@ import { subscribeToNewsletter } from "@/lib/newsletter.functions";
 export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
-  const [doneMessage, setDoneMessage] = useState("Thank you for subscribing.");
+  const [doneMessage, setDoneMessage] = useState("You have subscribed successfully.");
   const dark = variant === "dark";
 
   async function handleSubmit(e: React.FormEvent) {
@@ -15,19 +15,20 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
     if (!value) return;
 
     setStatus("sending");
-    setDoneMessage("Thank you for subscribing.");
+    setDoneMessage("You have subscribed successfully.");
 
     try {
       const result = await subscribeToNewsletter({ data: { email: value } });
 
       if (result.status === "duplicate") {
         setStatus("done");
-        setDoneMessage("This email is already subscribed.");
-        toast.success("This email is already subscribed.");
+        setDoneMessage("You are already subscribed.");
+        toast.success("You are already subscribed.");
         return;
       }
 
       if (result.status === "error") {
+        console.error("[newsletter] Client received error:", result.message);
         setStatus("error");
         toast.error("Could not subscribe right now. Please try again.");
         return;
@@ -40,9 +41,10 @@ export function Newsletter({ variant = "light" }: { variant?: "light" | "dark" }
         setDoneMessage("Subscription saved, but email notification failed.");
         toast.warning("Subscription saved, but email notification failed.");
       } else {
-        toast.success("Thank you for subscribing.");
+        toast.success("You have subscribed successfully.");
       }
-    } catch {
+    } catch (err) {
+      console.error("[newsletter] Client request failed:", err);
       setStatus("error");
       toast.error("Could not subscribe right now. Please try again.");
     }
