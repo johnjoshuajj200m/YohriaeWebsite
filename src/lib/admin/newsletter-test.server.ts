@@ -6,7 +6,7 @@ import {
 } from "@/lib/newsletter.server";
 import { validateNewsletterEnv, validateSupabasePublicEnv } from "@/lib/env.server";
 import { jsonErrorResponse, jsonResponse } from "@/lib/api/json-response.server";
-import { getPermissions } from "@/lib/admin/permissions";
+import { getPermissions, type AppRole } from "@/lib/admin/permissions";
 
 function looksLikeEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -128,7 +128,7 @@ async function assertNewsletterAccess(
     }
 
     const roles = [adminRow?.role, ...(roleRows ?? []).map((row) => row.role)].filter(
-      (role): role is string => Boolean(role),
+      (role): role is AppRole => Boolean(role),
     );
 
     if (!getPermissions(roles).canManageNewsletter) {
