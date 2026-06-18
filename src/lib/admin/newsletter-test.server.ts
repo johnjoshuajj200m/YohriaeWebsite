@@ -6,6 +6,7 @@ import {
 } from "@/lib/newsletter.server";
 import { validateNewsletterEnv, validateSupabasePublicEnv } from "@/lib/env.server";
 import { jsonErrorResponse, jsonResponse } from "@/lib/api/json-response.server";
+import { getPermissions, type AppRole } from "@/lib/admin/permissions";
 
 function looksLikeEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -113,12 +114,29 @@ async function assertNewsletterAccess(
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: adminRow }, { data: roleRows }] = await Promise.all([
-      supabaseAdmin.from("admins").select("role").eq("user_id", userId).maybeSingle(),
-      supabaseAdmin.from("user_roles").select("role").eq("user_id", userId).limit(1),
-    ]);
-    if (!adminRow && !(roleRows && roleRows.length > 0)) {
-      return { ok: false, error: "Forbidden: admin role required.", status: 403 };
+    const [{ data: adminRow, error: adminError }, { data: roleRows, error: rolesError }] =
+      await Promise.all([
+        supabaseAdmin.from("admins").select("role").eq("user_id", userId).maybeSingle(),
+        supabaseAdmin.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+    if (adminError || rolesError) {
+      return {
+        ok: false,
+        error: adminError?.message ?? rolesError?.message ?? "Could not verify admin role.",
+        status: 500,
+      };
+    }
+
+    const roles = [adminRow?.role, ...(roleRows ?? []).map((row) => row.role)].filter(
+      (role): role is AppRole => Boolean(role),
+    );
+
+    if (!getPermissions(roles).canManageNewsletter) {
+      return {
+        ok: false,
+        error: "Forbidden: newsletter management requires an admin role.",
+        status: 403,
+      };
     }
     return { ok: true };
   } catch (err) {
@@ -212,7 +230,21 @@ export async function runNewsletterTest(
   }
 }
 
-export async function respondToNewsletterStatusRequest(): Promise<Response> {
+export async function respondToNewsletterStatusRequest(request: Request): Promise<Response> {
+  if (request.method !== "GET") {
+    return jsonErrorResponse("Method not allowed.", 405);
+  }
+
+  const auth = await getAuthenticatedAdminUserId(request);
+  if (!auth.ok) {
+    return jsonErrorResponse(auth.error, auth.status);
+  }
+
+  const access = await assertNewsletterAccess(auth.userId);
+  if (!access.ok) {
+    return jsonErrorResponse(access.error, access.status);
+  }
+
   try {
     const status = describeNewsletterStatus();
     return jsonResponse({ ok: true, status });

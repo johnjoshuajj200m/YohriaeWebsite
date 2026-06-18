@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { userHasDashboardAccess } from "@/lib/admin/access";
-import { DEFAULT_POST_AUTH_PATH } from "@/lib/auth";
+import { normalizeRedirectPath } from "@/lib/auth";
 
 type CallbackSearch = {
   next?: string;
@@ -32,8 +32,7 @@ function AuthCallback() {
     let cancelled = false;
 
     async function finishSignIn() {
-      const nextPath =
-        search.next && search.next.startsWith("/") ? search.next : DEFAULT_POST_AUTH_PATH;
+      const nextPath = normalizeRedirectPath(search.next);
 
       if (search.error || search.error_description) {
         const err = search.error_description ?? search.error ?? "Sign-in was cancelled.";

@@ -1,11 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { AppRole } from "@/lib/admin/permissions";
 
-const DASHBOARD_ROLES = ["admin", "super_admin"] as const;
+const DASHBOARD_ROLES: AppRole[] = ["super_admin", "admin", "editor", "viewer"];
 
 type AdminRole = (typeof DASHBOARD_ROLES)[number];
 
 function isDashboardRole(role: string | null): role is AdminRole {
-  return role === "admin" || role === "super_admin";
+  return Boolean(role && DASHBOARD_ROLES.includes(role as AppRole));
 }
 
 async function findAdminRole(column: "user_id" | "id" | "email", value: string) {

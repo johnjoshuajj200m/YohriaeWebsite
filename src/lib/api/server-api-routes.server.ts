@@ -50,10 +50,10 @@ export async function respondToNewsletterTestRequestLazy(request: Request): Prom
   }
 }
 
-export async function respondToNewsletterStatusRequestLazy(): Promise<Response> {
+export async function respondToNewsletterStatusRequestLazy(request: Request): Promise<Response> {
   try {
     const { respondToNewsletterStatusRequest } = await import("@/lib/admin/newsletter-test.server");
-    return await respondToNewsletterStatusRequest();
+    return await respondToNewsletterStatusRequest(request);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("[newsletter-status] unhandled error", error);
@@ -81,7 +81,7 @@ export async function dispatchServerApiRoute(request: Request): Promise<Response
   }
 
   if (path === NEWSLETTER_STATUS_API_PATH) {
-    return respondToNewsletterStatusRequestLazy();
+    return respondToNewsletterStatusRequestLazy(request);
   }
 
   return null;

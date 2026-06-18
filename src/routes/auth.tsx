@@ -41,7 +41,8 @@ async function logAdminLookup(user: { id: string; email?: string | null }) {
   }
 
   const role =
-    results.find((admin) => admin.role === "admin" || admin.role === "super_admin")?.role ?? null;
+    results.find((admin) => ["super_admin", "admin", "editor", "viewer"].includes(admin.role))
+      ?.role ?? null;
   console.log("[admin auth] role value", role);
 }
 
